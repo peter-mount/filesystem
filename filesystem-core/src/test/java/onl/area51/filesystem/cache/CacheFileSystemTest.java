@@ -21,10 +21,10 @@ import java.net.URISyntaxException;
 import java.nio.file.FileSystems;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.Map;
 import onl.area51.filesystem.CommonTestUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -36,7 +36,9 @@ public class CacheFileSystemTest
 
     private static final String SCHEME = "cache";
     private static final String AUTHORITY = "cache.test";
-    private static final String URI_PREFIX = SCHEME + "://" + AUTHORITY;
+    private static final String URI_PREFIX1 = SCHEME + "://" + AUTHORITY + "1";
+    private static final String URI_PREFIX2 = SCHEME + "://" + AUTHORITY + "2";
+    private static final String URI_PREFIX3 = SCHEME + "://" + AUTHORITY + "3";
 
     @BeforeClass
     public static void setUpClass()
@@ -44,21 +46,41 @@ public class CacheFileSystemTest
     {
         System.setProperty( CacheFileSystemProvider.class.getName(), BASE_FILE.toString() );
 
-        FileSystems.newFileSystem( URI.create( URI_PREFIX ), new HashMap<>() );
+        // FileSystem 1 is a default cache
+        FileSystems.newFileSystem( URI.create( URI_PREFIX1 ), new HashMap<>() );
+
+        // FileSystem 2 is a mediawiki style cache
+        Map<String, Object> env = new HashMap<>();
+        env.put( "fileSystemType", "mediawiki" );
+        FileSystems.newFileSystem( URI.create( URI_PREFIX2 ), env );
+
+        // FileSystem 3 is a opendata style cache
+        env = new HashMap<>();
+        env.put( "fileSystemType", "opendata" );
+        FileSystems.newFileSystem( URI.create( URI_PREFIX3 ), env );
     }
 
     @Test
-    public void test()
-    {
-        assertTrue( BASE_FILE.exists() );
-        assertTrue( BASE_FILE.isDirectory() );
-    }
-
-    @Test
-    public void createFile()
+    public void createFile1()
             throws URISyntaxException,
                    IOException
     {
-        createFiles( Paths.get( URI.create( URI_PREFIX ) ), "file", 50 );
+        createFiles( Paths.get( URI.create( URI_PREFIX1 ) ), "file", 50, ".jpg" );
+    }
+
+    @Test
+    public void createFile2()
+            throws URISyntaxException,
+                   IOException
+    {
+        createFiles( Paths.get( URI.create( URI_PREFIX2 ) ), "file", 50, ".jpg" );
+    }
+
+    @Test
+    public void createFile3()
+            throws URISyntaxException,
+                   IOException
+    {
+        createFiles( Paths.get( URI.create( URI_PREFIX3 ) ), "file", 50, ".jpg" );
     }
 }

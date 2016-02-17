@@ -121,7 +121,7 @@ public abstract class AbstractLocalFileSystemIO
     }
 
     @Override
-    public final void createDirectory( char[] path, FileAttribute<?>[] attrs )
+    public  void createDirectory( char[] path, FileAttribute<?>[] attrs )
             throws IOException
     {
         Files.createDirectories( toPath( path ) );

@@ -52,10 +52,12 @@ public class FileSystemUtils
 
     /**
      * The Media image prefix. For example "Harry-Green-HampsteadHeath-copy.jpg" will return "0/02"
-     * 
+     *
      * @param path
+     *
      * @return
-     * @throws IOException 
+     *
+     * @throws IOException
      */
     public static String getMediaWikiPrefix( String path )
             throws IOException
@@ -80,5 +82,27 @@ public class FileSystemUtils
             throw new IOException( "Empty path" );
         }
         return path.substring( 0, 1 );
+    }
+
+    public static String getCachePrefix( String path )
+            throws IOException
+    {
+        String suffix = "";
+        int i = path.lastIndexOf( '.' ), j = path.lastIndexOf( '/' );
+        if( i > -1 && i > j ) {
+            suffix = path.substring( i );
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for( byte b: md5( path ) ) {
+            String p = Integer.toHexString( Byte.toUnsignedInt( b ) );
+            if( p.length() == 1 ) {
+                sb.append( '0' );
+            }
+            sb.append( p );
+        }
+
+        String p = sb.toString();
+        return p.substring( 0, 1 ) + "/" + p.substring( 0, 2 ) + "/" + p + suffix;
     }
 }

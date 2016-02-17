@@ -15,6 +15,7 @@
  */
 package onl.area51.filesystem;
 
+import java.io.IOException;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -27,7 +28,7 @@ public class FileSystemUtilsTest
 
     @Test
     public void getMediaWikiPrefix()
-            throws Exception
+            throws IOException
     {
         String p = FileSystemUtils.getMediaWikiPrefix( "Harry-Green-HampsteadHeath-copy.jpg" );
         assertEquals( "0/02", p );
@@ -35,10 +36,20 @@ public class FileSystemUtilsTest
 
     @Test
     public void getOpenDataCMSPrefix()
-            throws Exception
+            throws IOException
     {
         String p = FileSystemUtils.getOpenDataCMSPrefix( "Harry-Green-HampsteadHeath-copy.jpg" );
         assertEquals( "H", p );
     }
 
+    @Test
+    public void getCachePrefix()
+            throws IOException
+    {
+        assertEquals( "0/09/098f6bcd4621d373cade4e832627b4f6", FileSystemUtils.getCachePrefix( "test" ) );
+        assertEquals( "0/07/073402a6e3f1a393222038b31c140998", FileSystemUtils.getCachePrefix( "dir/test" ) );
+        assertEquals( "0/04/0412c29576c708cf0155e8de242169b1.jpg", FileSystemUtils.getCachePrefix( "test.jpg" ) );
+        assertEquals( "b/ba/bac3ba4acda45d834747e5b3339f0f1c.png", FileSystemUtils.getCachePrefix( "dir/test.png" ) );
+        assertEquals( "0/02/021ad58091421abab4be786251454727.jpg", FileSystemUtils.getCachePrefix( "Harry-Green-HampsteadHeath-copy.jpg" ) );
+    }
 }

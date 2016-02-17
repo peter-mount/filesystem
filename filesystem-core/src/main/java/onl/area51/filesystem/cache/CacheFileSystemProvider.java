@@ -45,7 +45,7 @@ public class CacheFileSystemProvider
     protected CacheFileSystem createFileSystem( URI uri, Path p, Map<String, ?> env )
             throws IOException
     {
-        return new CacheFileSystem( uri, this, p, env, LocalFileSystemIO.MediaWiki::new );
+        return new CacheFileSystem( uri, this, p, env, ( bp, e ) -> LocalFileSystemIO.create( bp, e, LocalFileSystemIO.Cache::new ) );
     }
 
     @Override

@@ -16,3 +16,9 @@ The local FileSystem simply exposes a local directory as a FileSystem. This is u
 # cache
 
 An alternative is cache which will store files within the directory in a more optimised manner to improve performance and disk usage.
+
+This FileSystem accepts a "fileSystemType" environment property which defines the layout of the cache.
+* cache - the default, the local filenames are based on the md5 of the filename
+* flat - emulates the local FileSystem
+* mediawiki - emulates how MediaWiki stores images
+* opendata - emulates how the OpenData CMS stores it's pages
