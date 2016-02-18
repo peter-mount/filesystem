@@ -49,8 +49,8 @@ public abstract class AbstractLocalFileSystemIO
 
     private final Map<String, ?> env;
 
-    private final Path basePath;
-    private final File baseFile;
+    protected final Path basePath;
+    protected final File baseFile;
 
     public AbstractLocalFileSystemIO( Path basePath, Map<String, ?> env )
     {
@@ -73,8 +73,19 @@ public abstract class AbstractLocalFileSystemIO
             throws IOException
     {
         if( isTemporary() ) {
-            deleteDir( baseFile );
+            clearFileSystem();
         }
+    }
+
+    protected final void clearFileSystem()
+            throws IOException
+    {
+        deleteDir( baseFile );
+    }
+
+    protected boolean delete( File f )
+    {
+        return f.delete();
     }
 
     private void deleteDir( File d )
@@ -85,7 +96,7 @@ public abstract class AbstractLocalFileSystemIO
                 deleteDir( f );
             }
         }
-        d.delete();
+        delete( d );
     }
 
     @Override
@@ -121,7 +132,7 @@ public abstract class AbstractLocalFileSystemIO
     }
 
     @Override
-    public  void createDirectory( char[] path, FileAttribute<?>[] attrs )
+    public void createDirectory( char[] path, FileAttribute<?>[] attrs )
             throws IOException
     {
         Files.createDirectories( toPath( path ) );

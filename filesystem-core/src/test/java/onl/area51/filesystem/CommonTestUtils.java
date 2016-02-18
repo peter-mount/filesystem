@@ -63,7 +63,13 @@ public class CommonTestUtils
     public static void createFiles( Path parent, String prefix, int count, String suffix )
             throws IOException
     {
-        IntStream.range( 0, count )
+        createFiles( parent, prefix, 0, count, suffix );
+    }
+
+    public static void createFiles( Path parent, String prefix, int start, int end, String suffix )
+            throws IOException
+    {
+        IntStream.range( start, end )
                 .mapToObj( i -> prefix + i + suffix )
                 .map( parent::resolve )
                 .forEach( CommonTestUtils::write );

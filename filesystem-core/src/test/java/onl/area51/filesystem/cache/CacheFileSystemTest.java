@@ -15,14 +15,22 @@
  */
 package onl.area51.filesystem.cache;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.IntFunction;
 import onl.area51.filesystem.CommonTestUtils;
+import onl.area51.filesystem.FileSystemIO;
+import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -62,25 +70,149 @@ public class CacheFileSystemTest
 
     @Test
     public void createFile1()
-            throws URISyntaxException,
-                   IOException
+            throws IOException
     {
         createFiles( Paths.get( URI.create( URI_PREFIX1 ) ), "file", 50, ".jpg" );
     }
 
     @Test
     public void createFile2()
-            throws URISyntaxException,
-                   IOException
+            throws IOException
     {
         createFiles( Paths.get( URI.create( URI_PREFIX2 ) ), "file", 50, ".jpg" );
     }
 
     @Test
     public void createFile3()
-            throws URISyntaxException,
-                   IOException
+            throws IOException
     {
         createFiles( Paths.get( URI.create( URI_PREFIX3 ) ), "file", 50, ".jpg" );
+    }
+
+    @Test
+    public void expireCache()
+            throws IOException,
+                   InterruptedException
+    {
+        expire( "cache" );
+    }
+
+    @Test
+    public void expireFlat()
+            throws IOException,
+                   InterruptedException
+    {
+        expire( "flat" );
+    }
+
+    @Test
+    public void expireMediaWiki()
+            throws IOException,
+                   InterruptedException
+    {
+        expire( "mediawiki" );
+    }
+
+    @Test
+    public void expireOpenData()
+            throws IOException,
+                   InterruptedException
+    {
+        expire( "opendata" );
+    }
+
+    private void expire( String fileSystemType )
+            throws IOException,
+                   InterruptedException
+    {
+        URI uri = URI.create( SCHEME + "://expire." + fileSystemType );
+
+        System.out.println( "Testing expiry for " + fileSystemType );
+
+        Map<String, Object> env = new HashMap<>();
+        env.put( "fileSystemType", fileSystemType );
+        env.put( "fileSystemType", "flat" );
+        env.put( "maxAge", 3000L );
+        env.put( "scanDelay", 1000L );
+
+        // We need this initially otherwise file timestamps go out of sync if this is not a clean build
+        env.put( "clearOnStartup", true );
+
+        try( FileSystem fs = FileSystems.newFileSystem( uri, env ) ) {
+            Path base = fs.getPath( "/" );
+
+            System.out.println( "Creating files that will expire" );
+            createFiles( base, "file", 0, 10, ".jpg" );
+            testPresent( base, 0, 10 );
+
+            sleep( 2 );
+
+            System.out.println( "Creating files that will not expire" );
+            createFiles( base, "file", 10, 20, ".jpg" );
+            testPresent( base, 0, 20 );
+
+            sleep( 2 );
+
+            System.out.println( "Creating files that will not expire when we reopen" );
+            createFiles( base, "file", 20, 30, ".jpg" );
+            testExpired( base, 0, 10 );
+            testPresent( base, 10, 30 );
+
+            System.out.println( "Closing filesystem" );
+        }
+
+        // Reopen the filesystem
+        System.out.println( "Reopen filesystem" );
+
+        // We don't want to clear on startup
+        env.remove( "clearOnStartup" );
+
+        try( FileSystem fs = FileSystems.newFileSystem( uri, env ) ) {
+            Path base = fs.getPath( "/" );
+
+            sleep( 1 );
+            testExpired( base, 0, 20 );
+            testPresent( base, 20, 30 );
+        }
+    }
+
+    private void sleep( long s )
+            throws InterruptedException
+    {
+        System.out.println( "Waiting " + s + " seconds" );
+        Thread.sleep( s * 1000L );
+    }
+
+    private void testExpired( Path b, int s, int e )
+    {
+        System.out.println( "Testing files " + s + " to " + e + " have been expired" );
+        for( int i = s; i < e; i++ ) {
+            String f = "/file" + i + ".jpg";
+            Path p = b.resolve( f );
+            try( InputStream is = Files.newInputStream( p, StandardOpenOption.READ ) ) {
+                fail( "File " + f + " exists" );
+            }
+            catch( FileNotFoundException ex ) {
+                // This is a pass
+            }
+            catch( Exception ex ) {
+                throw new AssertionError( f + " " + ex.getClass().getSimpleName(), ex );
+            }
+        }
+    }
+
+    private void testPresent( Path b, int s, int e )
+    {
+        System.out.println( "Testing files " + s + " to " + e + " have not been expired" );
+        for( int i = s; i < e; i++ ) {
+            String f = "/file" + i + ".jpg";
+            Path p = b.resolve( f );
+            try( InputStream is = Files.newInputStream( p, StandardOpenOption.READ ) ) {
+                // We have passed
+            }
+            catch( Exception ex ) {
+                throw new AssertionError( f + " " + ex.getClass().getSimpleName(), ex );
+            }
+        }
     }
 }

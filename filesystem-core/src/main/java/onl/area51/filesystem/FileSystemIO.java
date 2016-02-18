@@ -91,4 +91,7 @@ public interface FileSystemIO
      */
     public static final String DELETE_ON_EXIT = "deleteOnExit";
 
+    default void expire()
+    {
+    }
 }

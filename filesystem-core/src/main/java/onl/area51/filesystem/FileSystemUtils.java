@@ -18,6 +18,10 @@ package onl.area51.filesystem;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -25,6 +29,22 @@ import java.security.NoSuchAlgorithmException;
  */
 public class FileSystemUtils
 {
+
+    private static ScheduledExecutorService timers = Executors.newScheduledThreadPool( 1, r -> {
+                                                                                   Thread t = new Thread( r );
+                                                                                   t.setDaemon( true );
+                                                                                   return t;
+                                                                               } );
+
+    public static ScheduledFuture<?> scheduleAtFixedRate( Runnable command, long initialDelay, long period, TimeUnit unit )
+    {
+        return timers.scheduleAtFixedRate( command, initialDelay, period, unit );
+    }
+
+    public static ScheduledFuture<?> schedule( Runnable command, long delay, TimeUnit unit )
+    {
+        return timers.schedule( command, delay, unit );
+    }
 
     /**
      * Get the MD5 of a string

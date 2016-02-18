@@ -36,6 +36,11 @@ public class CacheFileSystem
             throws IOException
     {
         super( uri, provider, cachePath, env, fileSystemIO );
+
+        // If we are not readonly then expire us
+        if( !isReadOnly() ) {
+            getFileSystemIO().expire();
+        }
     }
 
     @Override

@@ -22,3 +22,9 @@ This FileSystem accepts a "fileSystemType" environment property which defines th
 * flat - emulates the local FileSystem
 * mediawiki - emulates how MediaWiki stores images
 * opendata - emulates how the OpenData CMS stores it's pages
+
+How entries are expired in caches are also configurable:
+* maxAge defines the max age in milliseconds that a file in the cache can exist before it's expired. If this is 0 (default) then there is no expiry.
+* scanDelay defines the period between expiry checks. If not present it defaults to maxAge. If maxAge is 0 then this has no effect.
+* expireOnStartup will run an expiry on the cache immediately the filesystem is opened. If maxAge is 0 then this has no effect.
+* clearOnStartup will clear the cache of all files when the filesystem is opened.

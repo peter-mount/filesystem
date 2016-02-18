@@ -68,9 +68,7 @@ public abstract class AbstractLocalFileSystem<F extends AbstractFileSystem<F, P,
             throws IOException
     {
         try {
-            if( getFileSystemIO().isTemporary() ) {
-                ((AbstractLocalFileSystemProvider) provider()).deleteFileSystem( this );
-            }
+            ((AbstractLocalFileSystemProvider) provider()).deleteFileSystem( this );
         }
         finally {
             getFileSystemIO().close();
