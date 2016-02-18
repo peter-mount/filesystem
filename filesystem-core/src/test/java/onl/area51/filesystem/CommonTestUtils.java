@@ -38,6 +38,11 @@ public class CommonTestUtils
     protected static final File BASE_FILE = new File( "target/filesystems" ).getAbsoluteFile();
     protected static final Path BASE_PATH = BASE_FILE.toPath().toAbsolutePath();
 
+    public static File getFile( String authority )
+    {
+        return new File( BASE_FILE, authority );
+    }
+
     public static void write( URI uri )
             throws IOException
     {
@@ -46,10 +51,11 @@ public class CommonTestUtils
 
     public static void write( Path p )
     {
-        try {
+        try
+        {
             Files.write( p, BODY, StandardOpenOption.CREATE, StandardOpenOption.WRITE );
-        }
-        catch( IOException ex ) {
+        } catch( IOException ex )
+        {
             throw new UncheckedIOException( ex );
         }
     }

@@ -51,17 +51,21 @@ public abstract class AbstractLocalFileSystemIO
 
     protected final Path basePath;
     protected final File baseFile;
+    private final boolean temporary;
 
     public AbstractLocalFileSystemIO( Path basePath, Map<String, ?> env )
     {
         this.env = env;
 
-        String customBasePath = env != null ? (String) env.get( BASE_DIRECTORY ) : null;
+        temporary = FileSystemUtils.isTrue( env, DELETE_ON_EXIT );
+
+        String customBasePath = FileSystemUtils.getString( env, BASE_DIRECTORY );
         Path path = customBasePath == null || customBasePath.trim().isEmpty() ? basePath : Paths.get( customBasePath );
         this.basePath = Objects.requireNonNull( path.toAbsolutePath(), "No basePath provided" );
 
         baseFile = this.basePath.toFile();
-        if( isTemporary() ) {
+        if( temporary )
+        {
             baseFile.deleteOnExit();
         }
 
@@ -72,7 +76,8 @@ public abstract class AbstractLocalFileSystemIO
     public void close()
             throws IOException
     {
-        if( isTemporary() ) {
+        if( isTemporary() )
+        {
             clearFileSystem();
         }
     }
@@ -91,8 +96,10 @@ public abstract class AbstractLocalFileSystemIO
     private void deleteDir( File d )
             throws IOException
     {
-        if( d.isDirectory() ) {
-            for( File f: d.listFiles() ) {
+        if( d.isDirectory() )
+        {
+            for( File f : d.listFiles() )
+            {
                 deleteDir( f );
             }
         }
@@ -108,7 +115,7 @@ public abstract class AbstractLocalFileSystemIO
     @Override
     public final boolean isTemporary()
     {
-        return env != null && env.containsKey( DELETE_ON_EXIT );
+        return temporary;
     }
 
     protected abstract Path toPath( char[] path )
@@ -118,7 +125,8 @@ public abstract class AbstractLocalFileSystemIO
             throws IOException
     {
         File f = toPath( path ).toFile();
-        if( isTemporary() ) {
+        if( isTemporary() )
+        {
             f.deleteOnExit();
         }
         return f;
@@ -186,14 +194,16 @@ public abstract class AbstractLocalFileSystemIO
     public final BasicFileAttributes getAttributes( char[] path )
             throws IOException
     {
-        if( path.length == 0 || (path.length == 1 && path[0] == '/') ) {
+        if( path.length == 0 || (path.length == 1 && path[0] == '/') )
+        {
             return RootFileAttributes.INSTANCE;
         }
         Path p = toPath( path );
-        try {
+        try
+        {
             return p.getFileSystem().provider().readAttributes( p, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS );
-        }
-        catch( IOException ex ) {
+        } catch( IOException ex )
+        {
             throw new IOException( "path=\"" + String.valueOf( path ) + "\" " + p.toString(), ex );
         }
     }
@@ -201,11 +211,12 @@ public abstract class AbstractLocalFileSystemIO
     @Override
     public final BasicFileAttributeView getAttributeView( char[] path )
     {
-        try {
+        try
+        {
             Path p = toPath( path );
             return p.getFileSystem().provider().getFileAttributeView( p, BasicFileAttributeView.class, LinkOption.NOFOLLOW_LINKS );
-        }
-        catch( IOException ex ) {
+        } catch( IOException ex )
+        {
             throw new UncheckedIOException( ex );
         }
     }

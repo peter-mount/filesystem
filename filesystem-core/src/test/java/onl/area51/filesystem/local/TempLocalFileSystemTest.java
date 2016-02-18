@@ -25,10 +25,7 @@ import java.util.Map;
 import onl.area51.filesystem.CommonTestUtils;
 import onl.area51.filesystem.FileSystemIO;
 import org.junit.Assert;
-import static org.junit.Assert.assertFalse;
 import org.junit.Test;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertFalse;
 
 /**
@@ -38,13 +35,6 @@ import static org.junit.Assert.assertFalse;
 public class TempLocalFileSystemTest
         extends CommonTestUtils
 {
-
-    private static final String SCHEME = "local";
-
-    private File getFile( String authority )
-    {
-        return new File( BASE_FILE, authority );
-    }
 
     private FileSystem create( String authority )
             throws IOException

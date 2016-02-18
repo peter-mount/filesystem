@@ -32,13 +32,15 @@ public class CacheFileSystem
         extends AbstractLocalFileSystem<CacheFileSystem, CachePath, CacheFileStore>
 {
 
-    CacheFileSystem( URI uri, CacheFileSystemProvider provider, Path cachePath, Map<String, ?> env, BiFunction<Path, Map<String, ?>, FileSystemIO> fileSystemIO )
+    CacheFileSystem( URI uri, CacheFileSystemProvider provider, Path cachePath, Map<String, ?> env,
+                     BiFunction<Path, Map<String, ?>, FileSystemIO> fileSystemIO )
             throws IOException
     {
         super( uri, provider, cachePath, env, fileSystemIO );
 
         // If we are not readonly then expire us
-        if( !isReadOnly() ) {
+        if( !isReadOnly() )
+        {
             getFileSystemIO().expire();
         }
     }

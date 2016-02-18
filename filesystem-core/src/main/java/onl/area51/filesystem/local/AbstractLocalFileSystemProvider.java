@@ -19,8 +19,6 @@ import com.sun.nio.zipfs.ZipFileAttributes;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UncheckedIOException;
-import java.net.URI;
 import java.nio.channels.AsynchronousFileChannel;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SeekableByteChannel;
@@ -28,123 +26,36 @@ import java.nio.file.AccessMode;
 import java.nio.file.CopyOption;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileStore;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystemNotFoundException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileAttributeView;
-import java.nio.file.spi.FileSystemProvider;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import onl.area51.filesystem.AbstractFileSystemProvider;
 
+/**
+ * Common base provider for FileSystem's that deal with the local FileSystem.
+ *
+ * @author peter
+ * @param <F>
+ * @param <P>
+ */
 public abstract class AbstractLocalFileSystemProvider<F extends AbstractLocalFileSystem<F, P, ?>, P extends AbstractLocalPath<F, P>>
-        extends FileSystemProvider
+        extends AbstractFileSystemProvider<F, P>
 {
 
-    private String cacheBase;
-    private final Map<Path, F> filesystems = new ConcurrentHashMap<>();
-
-    public final synchronized String getCacheBase()
-    {
-        if( cacheBase == null ) {
-            String base = System.getProperty( getClass().getName() );
-            if( base == null || base.trim().isEmpty() ) {
-                base = System.getProperty( "user.home" ) + "/.area51/" + getScheme();
-            }
-            if( base == null || base.trim().isEmpty() ) {
-                throw new IllegalStateException( "Invalid cacheBase" );
-            }
-            cacheBase = base;
-        }
-        return cacheBase;
-    }
-
-    @Override
-    public abstract String getScheme();
-
-    protected Path uriToPath( URI uri )
-            throws IOException
-    {
-        String scheme = uri.getScheme();
-        if( (scheme == null) || !scheme.equalsIgnoreCase( getScheme() ) ) {
-            throw new IllegalArgumentException( "URI scheme is not '" + getScheme() + "'" );
-        }
-
-        Path path = Paths.get( getCacheBase(), uri.getAuthority() ).toAbsolutePath();
-        Files.createDirectories( path );
-        return path;
-    }
-
-    protected abstract F createFileSystem( URI uri, Path p, Map<String, ?> env )
-            throws IOException;
-
-    @Override
-    public FileSystem newFileSystem( URI uri, Map<String, ?> env )
-            throws IOException
-    {
-        return filesystems.computeIfAbsent( uriToPath( uri ).toRealPath(),
-                                            realPath -> {
-                                                try {
-                                                    return createFileSystem( uri, realPath, env );
-                                                }
-                                                catch( IOException ex ) {
-                                                    throw new UncheckedIOException( ex );
-                                                }
-                                            } );
-    }
-
-    public void deleteFileSystem( FileSystem fs )
-    {
-        if( fs instanceof AbstractLocalFileSystem ) {
-            filesystems.remove( ((AbstractLocalFileSystem) fs).getCachePath() );
-        }
-    }
-
-    @Override
-    public FileSystem newFileSystem( Path path, Map<String, ?> env )
-            throws IOException
-    {
-        if( path.getFileSystem() != FileSystems.getDefault() ) {
-            throw new UnsupportedOperationException();
-        }
-
-        Files.createDirectories( path );
-        return createFileSystem( path.toUri(), path, env );
-    }
-
-    @Override
-    public Path getPath( URI uri )
-    {
-        return getFileSystem( uri ).getPath( uri.getPath() );
-    }
-
-    @Override
-    public FileSystem getFileSystem( URI uri )
-    {
-        AbstractLocalFileSystem fs;
-        try {
-            fs = filesystems.get( uriToPath( uri ).toRealPath() );
-        }
-        catch( IOException ex ) {
-            fs = null;
-        }
-        if( fs == null ) {
-            throw new FileSystemNotFoundException();
-        }
-        return fs;
-    }
-
-    // Checks that the given file is a UnixPath
+    /**
+     * Checks that the given file is a UnixPath
+     *
+     * @param path
+     * @return
+     */
     protected abstract P toCachePath( Path path );
 
     @Override
@@ -176,10 +87,11 @@ public abstract class AbstractLocalFileSystemProvider<F extends AbstractLocalFil
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings( "unchecked" )
     public <V extends FileAttributeView> V getFileAttributeView( Path path, Class<V> type, LinkOption... options )
     {
-        if( type.isAssignableFrom( BasicFileAttributeView.class ) ) {
+        if( type.isAssignableFrom( BasicFileAttributeView.class ) )
+        {
             P p = toCachePath( path );
             return (V) p.getFileSystem().getFileSystemIO().getAttributeView( p.getResolvedPath() );
         }
@@ -214,7 +126,8 @@ public abstract class AbstractLocalFileSystemProvider<F extends AbstractLocalFil
     }
 
     @Override
-    public AsynchronousFileChannel newAsynchronousFileChannel( Path path, Set<? extends OpenOption> options, ExecutorService exec, FileAttribute<?>... attrs )
+    public AsynchronousFileChannel newAsynchronousFileChannel( Path path, Set<? extends OpenOption> options,
+                                                               ExecutorService exec, FileAttribute<?>... attrs )
             throws IOException
     {
         throw new UnsupportedOperationException();
@@ -259,7 +172,8 @@ public abstract class AbstractLocalFileSystemProvider<F extends AbstractLocalFil
     public <A extends BasicFileAttributes> A readAttributes( Path path, Class<A> type, LinkOption... options )
             throws IOException
     {
-        if( type == BasicFileAttributes.class || type == ZipFileAttributes.class ) {
+        if( type == BasicFileAttributes.class || type == ZipFileAttributes.class )
+        {
             return (A) toCachePath( path ).getAttributes();
         }
         return null;

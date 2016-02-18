@@ -49,12 +49,13 @@ public abstract class LocalFileSystemIO
      */
     public static final String MAX_AGE = "maxAge";
     /**
-     * Environment key to tell the cache how often to expire files. If this is missing then it will default to MAX_AGE. If it's negative then it will disable
-     * the scan.
+     * Environment key to tell the cache how often to expire files. If this is missing then it will default to MAX_AGE. If it's
+     * negative then it will disable the scan.
      */
     public static final String SCAN_DELAY = "scanDelay";
     /**
-     * Environment key to tell the cache to expire on startup if MAX_AGE is defined. This is on by default, it may be disabled by setting this to false.
+     * Environment key to tell the cache to expire on startup if MAX_AGE is defined. This is on by default, it may be disabled
+     * by setting this to false.
      */
     public static final String EXPIRE_ON_STARTUP = "expireOnStartup";
     /**
@@ -65,10 +66,12 @@ public abstract class LocalFileSystemIO
 
     private ScheduledFuture<?> task;
 
-    public static FileSystemIO create( Path basePath, Map<String, ?> env, BiFunction<Path, Map<String, ?>, FileSystemIO> defaultIO )
+    public static FileSystemIO create( Path basePath, Map<String, ?> env,
+                                       BiFunction<Path, Map<String, ?>, FileSystemIO> defaultIO )
     {
         String type = env == null ? "" : Objects.toString( env.get( KEY ), "" ).trim().toLowerCase();
-        switch( type ) {
+        switch( type )
+        {
             case "flat":
                 return new Flat( basePath, env );
             case "mediawiki":
@@ -86,56 +89,40 @@ public abstract class LocalFileSystemIO
     {
         super( basePath, env );
 
-        maxAge = getLong( env, MAX_AGE, 0 );
+        maxAge = FileSystemUtils.getLong( env, MAX_AGE, 0 );
 
-        long delay = getLong( env, SCAN_DELAY, maxAge );
+        long delay = FileSystemUtils.getLong( env, SCAN_DELAY, maxAge );
 
-        boolean expireOnStartup;
-        try {
-            // Note: !False here as anything other than false should enable expire
-            expireOnStartup = env != null && !Boolean.FALSE.equals( env.get( EXPIRE_ON_STARTUP ) );
-        }
-        catch( Exception ex ) {
-            expireOnStartup = true;
-        }
+        boolean expireOnStartup = FileSystemUtils.isFalse( env, EXPIRE_ON_STARTUP );
 
-        boolean clearOnStartup = env != null && Boolean.TRUE.equals( env.get( CLEAR_ON_STARTUP ) );
-        if( clearOnStartup ) {
-            try {
+        boolean clearOnStartup = FileSystemUtils.isTrue( env, CLEAR_ON_STARTUP );
+        if( clearOnStartup )
+        {
+            try
+            {
                 clearFileSystem();
-            }
-            catch( IOException ex ) {
+            } catch( IOException ex )
+            {
                 // Ignore
             }
         }
 
-        if( maxAge > 0L ) {
-            if( delay > 0L ) {
+        if( maxAge > 0L )
+        {
+            if( delay > 0L )
+            {
                 task = FileSystemUtils.scheduleAtFixedRate( this::expire,
                                                             // Wait 1 second if expiring on startup otherwise wait for delay
                                                             expireOnStartup && !clearOnStartup ? 1000L : delay,
                                                             delay,
                                                             TimeUnit.MILLISECONDS );
             }
-            else if( expireOnStartup && !clearOnStartup ) {
+            else if( expireOnStartup && !clearOnStartup )
+            {
                 // Repeating has been disabled so wait 1 second then run expiry just once
                 task = FileSystemUtils.schedule( this::expire, 1000L, TimeUnit.MILLISECONDS );
             }
         }
-    }
-
-    private long getLong( Map<String, ?> env, String key, long defaultValue )
-    {
-        if( env != null ) {
-            Object o = env.get( key );
-            if( o instanceof Number ) {
-                return ((Number) o).longValue();
-            }
-            if( o instanceof String ) {
-                return Long.parseLong( (String) o );
-            }
-        }
-        return defaultValue;
     }
 
     protected abstract String getPath( char[] path )
@@ -146,7 +133,8 @@ public abstract class LocalFileSystemIO
             throws IOException
     {
         Path p = getBaseDirectory().resolve( getPath( path ) ).toAbsolutePath();
-        if( p.startsWith( getBaseDirectory() ) ) {
+        if( p.startsWith( getBaseDirectory() ) )
+        {
             return p;
         }
         throw new IOException( "Path is outside the FileSystem" );
@@ -156,12 +144,15 @@ public abstract class LocalFileSystemIO
     public void close()
             throws IOException
     {
-        try {
-            if( task != null ) {
+        try
+        {
+            if( task != null )
+            {
                 task.cancel( true );
             }
         }
-        finally {
+        finally
+        {
             task = null;
             super.close();
         }
@@ -170,9 +161,11 @@ public abstract class LocalFileSystemIO
     @Override
     public void expire()
     {
-        if( maxAge > 0L ) {
+        if( maxAge > 0L )
+        {
             final long cull = System.currentTimeMillis() - maxAge;
-            for( File f: baseFile.listFiles() ) {
+            for( File f : baseFile.listFiles() )
+            {
                 expireFile( cull, f );
             }
         }
@@ -180,14 +173,17 @@ public abstract class LocalFileSystemIO
 
     private boolean expireFile( final long cull, final File f )
     {
-        if( f.isDirectory() ) {
+        if( f.isDirectory() )
+        {
             boolean d = true;
-            for( File f1: f.listFiles() ) {
+            for( File f1 : f.listFiles() )
+            {
                 d = d & expireFile( cull, f1 );
             }
             return d && f.lastModified() < cull && delete( f );
         }
-        else if( f.isFile() && f.lastModified() < cull ) {
+        else if( f.isFile() && f.lastModified() < cull )
+        {
             return delete( f );
         }
         return false;
@@ -219,7 +215,8 @@ public abstract class LocalFileSystemIO
      * <p>
      * The local filesystem will have the files under directories formed from the first octet of the md5 of the filename.
      * <p>
-     * So for the file "/Harry-Green-HampsteadHeath-copy.jpg" then the local file will be "0/02/Harry-Green-HampsteadHeath-copy.jpg"
+     * So for the file "/Harry-Green-HampsteadHeath-copy.jpg" then the local file will be
+     * "0/02/Harry-Green-HampsteadHeath-copy.jpg"
      */
     public static class MediaWiki
             extends LocalFileSystemIO
@@ -243,10 +240,12 @@ public abstract class LocalFileSystemIO
     /**
      * A FileSystem which stores files with their MD5's.
      * <p>
-     * So for the file "/Harry-Green-HampsteadHeath-copy.jpg" then the local file will be "0/02/021ad58091421abab4be786251454727.jpg".
-     * Note the last portion of the file after '.' will be included in the final file name.
+     * So for the file "/Harry-Green-HampsteadHeath-copy.jpg" then the local file will be
+     * "0/02/021ad58091421abab4be786251454727.jpg". Note the last portion of the file after '.' will be included in the final
+     * file name.
      * <p>
-     * Also this instance will not return a directory listing and creating directories do nothing as they are meaningless when stored locally.
+     * Also this instance will not return a directory listing and creating directories do nothing as they are meaningless when
+     * stored locally.
      */
     public static class Cache
             extends LocalFileSystemIO
@@ -312,7 +311,8 @@ public abstract class LocalFileSystemIO
      * <p>
      * The local filesystem will have the files under directories formed from the first character of the file.
      * <p>
-     * So for the file "/Harry-Green-HampsteadHeath-copy.jpg" then the local file will be "H/Harry-Green-HampsteadHeath-copy.jpg"
+     * So for the file "/Harry-Green-HampsteadHeath-copy.jpg" then the local file will be
+     * "H/Harry-Green-HampsteadHeath-copy.jpg"
      */
     public static class OpenDataCMS
             extends LocalFileSystemIO

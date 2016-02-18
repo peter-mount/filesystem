@@ -38,16 +38,19 @@ public abstract class AbstractLocalFileSystem<F extends AbstractFileSystem<F, P,
                                     BiFunction<Path, Map<String, ?>, FileSystemIO> fileSystemIO )
             throws IOException
     {
-        super( uri, provider, env, fileSystemIO.apply( cachePath, env ), cachePath.getName( cachePath.getNameCount() - 1 ).toString() );
+        super( uri, provider, env, cachePath, fileSystemIO, cachePath.getName( cachePath.getNameCount() - 1 ).toString() );
+        
         this.cachePath = getFileSystemIO().getBaseDirectory();
 
-        if( Files.notExists( cachePath ) ) {
+        if( Files.notExists( cachePath ) )
+        {
             Files.createDirectories( cachePath );
         }
 
         // sm and existence check
         cachePath.getFileSystem().provider().checkAccess( cachePath, AccessMode.READ );
-        if( !Files.isWritable( cachePath ) ) {
+        if( !Files.isWritable( cachePath ) )
+        {
             setReadOnly( true );
         }
     }
@@ -67,10 +70,12 @@ public abstract class AbstractLocalFileSystem<F extends AbstractFileSystem<F, P,
     public void close()
             throws IOException
     {
-        try {
+        try
+        {
             ((AbstractLocalFileSystemProvider) provider()).deleteFileSystem( this );
         }
-        finally {
+        finally
+        {
             getFileSystemIO().close();
         }
     }
