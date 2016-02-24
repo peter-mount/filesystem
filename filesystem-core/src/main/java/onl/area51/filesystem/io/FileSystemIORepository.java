@@ -27,6 +27,9 @@ import java.util.Enumeration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import onl.area51.filesystem.FileSystemUtils;
 
 /**
@@ -35,6 +38,8 @@ import onl.area51.filesystem.FileSystemUtils;
  */
 public class FileSystemIORepository
 {
+
+    private static final Logger LOG = Logger.getLogger( FileSystemIORepository.class.getName() );
 
     /**
      * Environment key of a function to create a wrapper
@@ -50,7 +55,7 @@ public class FileSystemIORepository
 
     static {
         try {
-            Enumeration<URL> en = FileSystemIORepository.class.getClassLoader().getResources( FileSystemIO.class.getName() );
+            Enumeration<URL> en = FileSystemIORepository.class.getClassLoader().getResources( "META-INF/services/" + FileSystemIO.class.getName() );
             while( en.hasMoreElements() ) {
                 try( BufferedReader r = new BufferedReader( new InputStreamReader( en.nextElement().openStream() ) ) ) {
                     r.lines()
@@ -82,6 +87,12 @@ public class FileSystemIORepository
         catch( IOException ex ) {
             throw new UncheckedIOException( ex );
         }
+
+        LOG.log( Level.INFO, () -> IMPLEMENTATIONS.keySet()
+                 .stream()
+                 .sorted()
+                 .collect( Collectors.joining( ", ", "Available FileSystemIO implementations: ", "" ) )
+        );
     }
 
     private FileSystemIORepository()

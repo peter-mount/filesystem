@@ -161,9 +161,10 @@ public class CacheFileSystemTest
             System.out.println( "Closing filesystem" );
         }
 
+        sleep( 1 );
+
         // Reopen the filesystem
         System.out.println( "Reopen filesystem" );
-
         // We don't want to clear on startup
         env.remove( "clearOnStartup" );
 
