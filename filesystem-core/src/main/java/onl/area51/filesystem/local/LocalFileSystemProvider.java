@@ -15,6 +15,7 @@
  */
 package onl.area51.filesystem.local;
 
+import onl.area51.filesystem.io.LocalFileSystemIO;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
@@ -22,6 +23,7 @@ import java.nio.file.ProviderMismatchException;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.Map;
 import java.util.Objects;
+import onl.area51.filesystem.io.Flat;
 import org.kohsuke.MetaInfServices;
 
 /**
@@ -43,7 +45,7 @@ public class LocalFileSystemProvider
     protected LocalFileSystem createFileSystem( URI uri, Path p, Map<String, ?> env )
             throws IOException
     {
-        return new LocalFileSystem( uri, this, p, env, LocalFileSystemIO.Flat::new );
+        return new LocalFileSystem( uri, this, p, env, Flat::new );
     }
 
     @Override

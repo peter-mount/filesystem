@@ -20,7 +20,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.function.BiFunction;
-import onl.area51.filesystem.FileSystemIO;
+import onl.area51.filesystem.io.FileSystemIO;
 
 /**
  * A FileSystem built on a zip file

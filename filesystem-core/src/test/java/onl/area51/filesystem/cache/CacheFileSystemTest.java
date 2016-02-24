@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.IntFunction;
 import onl.area51.filesystem.CommonTestUtils;
-import onl.area51.filesystem.FileSystemIO;
+import onl.area51.filesystem.io.FileSystemIO;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;

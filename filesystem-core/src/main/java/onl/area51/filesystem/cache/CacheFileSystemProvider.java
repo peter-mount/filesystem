@@ -22,8 +22,8 @@ import java.nio.file.ProviderMismatchException;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.Map;
 import java.util.Objects;
+import onl.area51.filesystem.io.FileSystemIORepository;
 import onl.area51.filesystem.local.AbstractLocalFileSystemProvider;
-import onl.area51.filesystem.local.LocalFileSystemIO;
 import org.kohsuke.MetaInfServices;
 
 /**
@@ -45,7 +45,7 @@ public class CacheFileSystemProvider
     protected CacheFileSystem createFileSystem( URI uri, Path p, Map<String, ?> env )
             throws IOException
     {
-        return new CacheFileSystem( uri, this, p, env, ( bp, e ) -> LocalFileSystemIO.create( bp, e, LocalFileSystemIO.Cache::new ) );
+        return new CacheFileSystem( uri, this, p, env, FileSystemIORepository::create );
     }
 
     @Override

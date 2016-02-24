@@ -15,7 +15,10 @@
  */
 package onl.area51.filesystem;
 
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -26,10 +29,12 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * General utility functions
@@ -42,12 +47,13 @@ public class FileSystemUtils
     public static final String UTF8 = StandardCharsets.UTF_8.name();
 
     private static final ScheduledExecutorService TIMERS = Executors.newScheduledThreadPool( 1, r
-                                                                                             -> 
-                                                                                             {
-                                                                                                 Thread t = new Thread( r );
-                                                                                                 t.setDaemon( true );
-                                                                                                 return t;
+                                                                                             -> {
+                                                                                         Thread t = new Thread( r );
+                                                                                         t.setDaemon( true );
+                                                                                         return t;
                                                                                      } );
+
+    private static final File CONFIG_DIR = new File( System.getProperty( "area51.filesystem", System.getProperty( "user.home" ) + "/.area51/cache.config" ) );
 
     /**
      * Schedule a task repeatedly
@@ -56,6 +62,7 @@ public class FileSystemUtils
      * @param initialDelay the initial delay from calling this method until it first executes
      * @param period       the delay between executions
      * @param unit         TimeUnit for initialDelay and period
+     *
      * @return ScheduledFuture which can be used to cancel the task
      */
     public static ScheduledFuture<?> scheduleAtFixedRate( Runnable command, long initialDelay, long period, TimeUnit unit )
@@ -69,6 +76,7 @@ public class FileSystemUtils
      * @param command Task to execute
      * @param delay   the delay between executions
      * @param unit    TimeUnit for initialDelay and period
+     *
      * @return ScheduledFuture which can be used to cancel the task
      */
     public static ScheduledFuture<?> schedule( Runnable command, long delay, TimeUnit unit )
@@ -85,11 +93,10 @@ public class FileSystemUtils
     public static byte[] md5( String s )
             throws IOException
     {
-        try
-        {
+        try {
             return MessageDigest.getInstance( "MD5" ).digest( s.getBytes() );
-        } catch( NoSuchAlgorithmException ex )
-        {
+        }
+        catch( NoSuchAlgorithmException ex ) {
             throw new IOException( ex );
         }
     }
@@ -98,6 +105,7 @@ public class FileSystemUtils
      * Returns a byte as a 2 digit hexadecimal number
      *
      * @param b
+     *
      * @return
      */
     private static String fix( byte b )
@@ -134,8 +142,7 @@ public class FileSystemUtils
     public static String getOpenDataCMSPrefix( String path )
             throws IOException
     {
-        if( path == null || path.isEmpty() )
-        {
+        if( path == null || path.isEmpty() ) {
             throw new IOException( "Empty path" );
         }
         return path.substring( 0, 1 );
@@ -144,11 +151,13 @@ public class FileSystemUtils
     /**
      * Converts the supplied path into a path for a cache. This path will be of the form 0/01/012345.suffix where 0 is the first
      * digit of the original path's md5, 01 the first two digits of the md5 and 012345 the full md5 value.
-     *
+     * <p>
      * If the original path had a suffix/file type (i.e. ".jpg") then that will also be appended to the final path.
      *
      * @param path Path to convert
+     *
      * @return the full cache path name
+     *
      * @throws IOException
      */
     public static String getCachePrefix( String path )
@@ -156,17 +165,14 @@ public class FileSystemUtils
     {
         String suffix = "";
         int i = path.lastIndexOf( '.' ), j = path.lastIndexOf( '/' );
-        if( i > -1 && i > j )
-        {
+        if( i > -1 && i > j ) {
             suffix = path.substring( i );
         }
 
         StringBuilder sb = new StringBuilder();
-        for( byte b : md5( path ) )
-        {
+        for( byte b: md5( path ) ) {
             String p = Integer.toHexString( Byte.toUnsignedInt( b ) );
-            if( p.length() == 1 )
-            {
+            if( p.length() == 1 ) {
                 sb.append( '0' );
             }
             sb.append( p );
@@ -182,19 +188,17 @@ public class FileSystemUtils
      *
      * @param env  Environment
      * @param name parameter name
+     *
      * @return
      */
     public static boolean isTrue( Map<String, ?> env, String name )
     {
-        if( env != null && env.containsKey( name ) )
-        {
+        if( env != null && env.containsKey( name ) ) {
             Object o = env.get( name );
-            if( o instanceof Boolean )
-            {
+            if( o instanceof Boolean ) {
                 return (Boolean) o;
             }
-            else
-            {
+            else {
                 return !Boolean.FALSE.equals( env.get( name ) );
             }
         }
@@ -207,6 +211,7 @@ public class FileSystemUtils
      *
      * @param env  Environment
      * @param name parameter name
+     *
      * @return
      */
     public static boolean isFalse( Map<String, ?> env, String name )
@@ -219,6 +224,7 @@ public class FileSystemUtils
      *
      * @param env
      * @param key
+     *
      * @return
      */
     public static String getString( Map<String, ?> env, String key )
@@ -232,6 +238,7 @@ public class FileSystemUtils
      * @param env
      * @param key
      * @param defaultValue
+     *
      * @return
      */
     public static String getString( Map<String, ?> env, String key, String defaultValue )
@@ -245,43 +252,51 @@ public class FileSystemUtils
      * @param env
      * @param key
      * @param defaultValue
+     *
      * @return
      */
     public static long getLong( Map<String, ?> env, String key, long defaultValue )
     {
-        if( env != null )
-        {
+        if( env != null ) {
             Object o = env.get( key );
-            if( o instanceof Number )
-            {
+            if( o instanceof Number ) {
                 return ((Number) o).longValue();
             }
-            if( o instanceof String )
-            {
+            if( o instanceof String ) {
                 return Long.parseLong( (String) o );
             }
         }
         return defaultValue;
     }
 
+    public static <T> T get( Map<String, ?> env, String key )
+    {
+        return env == null ? null : (T) env.get( key );
+    }
+
+    public static <T> T get( Map<String, ?> env, String key, Supplier<T> defaultValue )
+    {
+        T t = env == null ? null : (T) env.get( key );
+        return t == null ? defaultValue.get() : t;
+    }
+
     /**
      * Returns a clean URI. This uri will be the supplied one with no query string or fragment.
      *
      * @param uri
+     *
      * @return
      */
     public static final URI getCleanURI( URI uri )
     {
-        if( uri == null )
-        {
+        if( uri == null ) {
             return uri;
         }
 
-        try
-        {
+        try {
             return new URI( uri.getScheme(), uri.getAuthority(), uri.getPath(), null, null );
-        } catch( URISyntaxException x )
-        {
+        }
+        catch( URISyntaxException x ) {
             throw new IllegalArgumentException( x.getMessage(), x );
         }
     }
@@ -290,20 +305,19 @@ public class FileSystemUtils
      * Returns the filesystem URI. This will consist of just the scheme and authority from the supplied URI.
      *
      * @param uri
+     *
      * @return
      */
     public static final URI getFileSystemURI( URI uri )
     {
-        if( uri == null )
-        {
+        if( uri == null ) {
             return uri;
         }
 
-        try
-        {
+        try {
             return new URI( uri.getScheme(), uri.getAuthority(), null, null, null );
-        } catch( URISyntaxException x )
-        {
+        }
+        catch( URISyntaxException x ) {
             throw new IllegalArgumentException( x.getMessage(), x );
         }
     }
@@ -313,41 +327,68 @@ public class FileSystemUtils
      *
      * @param uri
      * @param env
+     *
      * @return
      */
     public static final Map<String, ?> getFileSystemEnv( URI uri, Map<String, ?> env )
     {
-        if( uri == null || uri.getQuery() == null || uri.getQuery().isEmpty() )
-        {
-            return env;
-        }
+        final Map<String, Object> newEnv = new HashMap<>();
 
-        Map<String, Object> newEnv = new HashMap<>();
-        if( env != null )
-        {
-            newEnv.putAll( env );
+        if( uri == null ) {
+            mergeEnv( newEnv, env );
         }
-
-        try
-        {
-            for( String param : uri.getQuery().split( "&" ) )
-            {
-                int idx = param.indexOf( "=" );
-                if( idx < 0 )
-                {
-                    newEnv.put( URLDecoder.decode( param, UTF8 ), "" );
-                }
-                else
-                {
-                    newEnv.put( URLDecoder.decode( param.substring( 0, idx ), UTF8 ), URLDecoder.decode( param.substring( idx + 1 ), UTF8 ) );
-                }
-            }
-        } catch( UnsupportedEncodingException ex )
-        {
-            throw new IllegalArgumentException( ex );
+        else {
+            readConfig( newEnv, uri );
+            mergeEnv( newEnv, env );
+            parseQueryParams( newEnv, uri );
         }
 
         return newEnv;
     }
 
+    private static void readConfig( Map<String, Object> newEnv, URI uri )
+    {
+        // Read in any config from file system
+        File file = new File( CONFIG_DIR, uri.getAuthority() + ".properties" );
+        if( file.exists() ) {
+            try( Reader r = new FileReader( file ) ) {
+                Properties p = new Properties();
+                p.load( r );
+
+                if( !p.isEmpty() ) {
+                    p.forEach( ( k, v ) -> newEnv.put( k.toString(), v ) );
+                }
+            }
+            catch( IOException ex ) {
+                // Ignore
+            }
+        }
+    }
+
+    private static void mergeEnv( Map<String, Object> newEnv, Map<String, ?> env )
+    {
+        if( env != null ) {
+            newEnv.putAll( env );
+        }
+    }
+
+    private static void parseQueryParams( Map<String, Object> env, URI uri )
+    {
+        if( uri.getQuery() != null && !uri.getQuery().isEmpty() ) {
+            try {
+                for( String param: uri.getQuery().split( "&" ) ) {
+                    int idx = param.indexOf( "=" );
+                    if( idx < 0 ) {
+                        env.put( URLDecoder.decode( param, UTF8 ), "" );
+                    }
+                    else {
+                        env.put( URLDecoder.decode( param.substring( 0, idx ), UTF8 ), URLDecoder.decode( param.substring( idx + 1 ), UTF8 ) );
+                    }
+                }
+            }
+            catch( UnsupportedEncodingException ex ) {
+                throw new IllegalArgumentException( ex );
+            }
+        }
+    }
 }

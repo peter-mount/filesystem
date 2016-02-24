@@ -15,6 +15,7 @@
  */
 package onl.area51.filesystem;
 
+import onl.area51.filesystem.io.FileSystemIO;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.FileStore;
@@ -133,7 +134,7 @@ public abstract class AbstractFileSystem<F extends AbstractFileSystem<F, P, S>, 
         }
         else
         {
-            StringJoiner j = new StringJoiner( "." );
+            StringJoiner j = new StringJoiner( "/" );
             j.add( first );
             for( String segment : more )
             {

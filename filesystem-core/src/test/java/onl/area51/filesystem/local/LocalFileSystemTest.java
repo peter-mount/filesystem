@@ -29,7 +29,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import onl.area51.filesystem.CommonTestUtils;
-import onl.area51.filesystem.FileSystemIO;
+import onl.area51.filesystem.io.FileSystemIO;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;

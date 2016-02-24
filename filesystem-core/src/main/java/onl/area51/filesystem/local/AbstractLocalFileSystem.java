@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import onl.area51.filesystem.AbstractFileSystem;
 import onl.area51.filesystem.AbstractPath;
-import onl.area51.filesystem.FileSystemIO;
+import onl.area51.filesystem.io.FileSystemIO;
 
 public abstract class AbstractLocalFileSystem<F extends AbstractFileSystem<F, P, S>, P extends AbstractPath<F, P>, S extends FileStore>
         extends AbstractFileSystem<F, P, S>

@@ -23,7 +23,7 @@ import java.nio.file.FileSystems;
 import java.util.HashMap;
 import java.util.Map;
 import onl.area51.filesystem.CommonTestUtils;
-import onl.area51.filesystem.FileSystemIO;
+import onl.area51.filesystem.io.FileSystemIO;
 import org.junit.Assert;
 import org.junit.Test;
 import static org.junit.Assert.assertFalse;
