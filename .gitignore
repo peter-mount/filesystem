@@ -1,1 +1,3 @@
 /filesystem-core/target/
+/filesystem-http/target/
+/filesystem-http/nbproject/

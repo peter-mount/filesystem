@@ -18,6 +18,8 @@ package onl.area51.filesystem;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -390,5 +392,21 @@ public class FileSystemUtils
                 throw new IllegalArgumentException( ex );
             }
         }
+    }
+
+    // buffer size used for reading and writing
+    private static final int BUFFER_SIZE = 8192;
+    
+    public static long copy( InputStream source, OutputStream sink )
+            throws IOException
+    {
+        long nread = 0L;
+        byte[] buf = new byte[BUFFER_SIZE];
+        int n;
+        while( (n = source.read( buf )) > 0 ) {
+            sink.write( buf, 0, n );
+            nread += n;
+        }
+        return nread;
     }
 }

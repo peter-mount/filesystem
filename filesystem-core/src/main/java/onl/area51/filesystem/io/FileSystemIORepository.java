@@ -19,7 +19,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -27,6 +26,7 @@ import java.util.Enumeration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -52,47 +52,83 @@ public class FileSystemIORepository
     public static final String KEY = "fileSystemType";
 
     private static final Map<String, BiFunction<Path, Map<String, ?>, FileSystemIO>> IMPLEMENTATIONS = new ConcurrentHashMap<>();
+    private static final Map<String, BiFunction<FileSystemIO, Map<String, ?>, FileSystemIO>> OVERLAYS = new ConcurrentHashMap<>();
 
-    static {
+    private static void forEach( Class clazz, Consumer<String> action )
+    {
         try {
-            Enumeration<URL> en = FileSystemIORepository.class.getClassLoader().getResources( "META-INF/services/" + FileSystemIO.class.getName() );
+            Enumeration<URL> en = FileSystemIORepository.class.getClassLoader().getResources( "META-INF/services/" + clazz.getName() );
             while( en.hasMoreElements() ) {
                 try( BufferedReader r = new BufferedReader( new InputStreamReader( en.nextElement().openStream() ) ) ) {
                     r.lines()
                             .map( String::trim )
                             .filter( s -> !s.isEmpty() || !s.startsWith( "#" ) )
-                            .forEach( l -> {
-                                try {
-                                    Class<FileSystemIO> clazz = (Class<FileSystemIO>) Class.forName( l );
-                                    IMPLEMENTATIONS.computeIfAbsent( clazz.getSimpleName().toLowerCase(), k -> ( p, e ) -> {
-                                                                 try {
-                                                                     return clazz.getConstructor( Path.class, Map.class ).newInstance( p, e );
-                                                                 }
-                                                                 catch( NoSuchMethodException |
-                                                                        InstantiationException |
-                                                                        IllegalAccessException |
-                                                                        InvocationTargetException ex ) {
-                                                                     throw new RuntimeException( ex );
-                                                                 }
-                                                             } );
-                                }
-                                catch( ClassNotFoundException ex ) {
-                                    throw new RuntimeException( ex );
-                                }
-                            }
-                            );
+                            .forEach( action );
                 }
             }
         }
         catch( IOException ex ) {
             throw new UncheckedIOException( ex );
         }
+    }
+
+    static {
+        forEach( FileSystemIO.class,
+                 l -> {
+                     try {
+                         Class<FileSystemIO> clazz = (Class<FileSystemIO>) Class.forName( l );
+                         IMPLEMENTATIONS.computeIfAbsent( clazz.getSimpleName().toLowerCase(), k -> ( p, e ) -> {
+                                                      try {
+                                                          return clazz.getConstructor( Path.class, Map.class ).newInstance( p, e );
+                                                      }
+                                                      catch( NoSuchMethodException |
+                                                             InstantiationException |
+                                                             IllegalAccessException |
+                                                             InvocationTargetException ex ) {
+                                                          throw new RuntimeException( ex );
+                                                      }
+                                                  } );
+                     }
+                     catch( ClassNotFoundException ex ) {
+                         throw new RuntimeException( ex );
+                     }
+                 }
+        );
 
         LOG.log( Level.INFO, () -> IMPLEMENTATIONS.keySet()
                  .stream()
                  .sorted()
                  .collect( Collectors.joining( ", ", "Available FileSystemIO implementations: ", "" ) )
         );
+
+        forEach( OverlayingFileSystemIO.class,
+                 l -> {
+                     try {
+                         Class<FileSystemIO> clazz = (Class<FileSystemIO>) Class.forName( l );
+                         OVERLAYS.computeIfAbsent( clazz.getSimpleName().toLowerCase(), k -> ( p, e ) -> {
+                                               try {
+                                                   return clazz.getConstructor( FileSystemIO.class, Map.class ).newInstance( p, e );
+                                               }
+                                               catch( NoSuchMethodException |
+                                                      InstantiationException |
+                                                      IllegalAccessException |
+                                                      InvocationTargetException ex ) {
+                                                   throw new RuntimeException( ex );
+                                               }
+                                           } );
+                     }
+                     catch( ClassNotFoundException ex ) {
+                         throw new RuntimeException( ex );
+                     }
+                 }
+        );
+
+        LOG.log( Level.INFO, () -> OVERLAYS.keySet()
+                 .stream()
+                 .sorted()
+                 .collect( Collectors.joining( ", ", "Available FileSystemIO overlays: ", "" ) )
+        );
+
     }
 
     private FileSystemIORepository()
@@ -118,9 +154,23 @@ public class FileSystemIORepository
     {
         FileSystemIO io = IMPLEMENTATIONS.getOrDefault( type == null ? "" : type.trim().toLowerCase(), defaultIO ).apply( basePath, env );
 
-        BiFunction<FileSystemIO, Map<String, ?>, FileSystemIO> mapper = FileSystemUtils.get( env, WRAPPER );
-        if( mapper != null ) {
-            io = mapper.apply( io, env );
+        Object o = FileSystemUtils.get( env, WRAPPER );
+        if( o != null ) {
+            BiFunction<FileSystemIO, Map<String, ?>, FileSystemIO> mapper = null;
+
+            if( o instanceof BiFunction ) {
+                mapper = (BiFunction<FileSystemIO, Map<String, ?>, FileSystemIO>) o;
+            }
+            else if( o instanceof String ) {
+                mapper = OVERLAYS.get( o.toString().trim().toLowerCase() );
+            }
+
+            if( mapper == null ) {
+                throw new IllegalArgumentException( "Unsupported " + WRAPPER + ": " + o );
+            }
+            else {
+                io = mapper.apply( io, env );
+            }
         }
 
         return io;
