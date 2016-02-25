@@ -15,7 +15,6 @@
  */
 package onl.area51.filesystem.io;
 
-import onl.area51.filesystem.io.FileSystemIO;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -215,7 +214,7 @@ public abstract class AbstractLocalFileSystemIO
     }
 
     @Override
-    public final BasicFileAttributes getAttributes( char[] path )
+    public BasicFileAttributes getAttributes( char[] path )
             throws IOException
     {
         if( path.length == 0 || (path.length == 1 && path[0] == '/') ) {

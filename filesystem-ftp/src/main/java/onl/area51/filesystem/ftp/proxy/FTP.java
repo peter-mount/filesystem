@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package onl.area51.filesystem.http;
+package onl.area51.filesystem.ftp.proxy;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -38,22 +38,22 @@ import org.apache.http.impl.client.HttpClients;
 import org.kohsuke.MetaInfServices;
 
 /**
- *
+ * FTP overlay - will retrieve from the remote file system and store in a local cache
  * @author peter
  */
 @MetaInfServices(OverlayingFileSystemIO.class)
-public class Http
+public class FTP
         extends OverlayingFileSystemIO.Synchronous
 {
 
-    private static final Logger LOG = Logger.getLogger( Http.class.getName() );
+    private static final Logger LOG = Logger.getLogger(FTP.class.getName() );
 
     private static final String URL = "remoteUrl";
 
     private final CloseableHttpClient client;
     private final URI remoteUrl;
 
-    public Http( FileSystemIO delegate, Map<String, ?> env )
+    public FTP( FileSystemIO delegate, Map<String, ?> env )
     {
         super( delegate, Executors.newSingleThreadExecutor() );
 
@@ -89,7 +89,7 @@ public class Http
             }
 
             StringBuilder b = new StringBuilder().append( remoteUrl.getPath() );
-            if( b.length() == 0 || b.charAt( b.length() - 1 ) != '/' ) {
+            if( b.charAt( b.length() - 1 ) != '/' ) {
                 b.append( '/' );
             }
             if( path.startsWith( "/" ) ) {
@@ -100,21 +100,18 @@ public class Http
             }
             String p = b.toString();
 
+            LOG.log( Level.INFO, () -> "Retrieving " + p );
+
             URI uri = new URI( remoteUrl.getScheme(), remoteUrl.getAuthority(), p, remoteUrl.getQuery(), null );
 
             LOG.log( Level.INFO, () -> "Retrieving " + uri );
 
             HttpGet get = new HttpGet( uri );
-            get.setHeader( "User-Agent","Area51 Mozilla/5.0 (Linux x86_64)" );
 
             HttpResponse response = client.execute( get );
 
-            int returnCode = response.getStatusLine().getStatusCode();
-            LOG.log( Level.INFO, () -> "ReturnCode " + returnCode + ": " + response.getStatusLine().getReasonPhrase() );
-
-            switch( returnCode ) {
+            switch( response.getStatusLine().getStatusCode() ) {
                 case 200:
-                case 304:
                     try( InputStream is = response.getEntity().getContent() ) {
                         try( OutputStream os = getDelegate().newOutputStream( path.toCharArray(),
                                                                               StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING,

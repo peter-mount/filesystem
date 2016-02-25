@@ -63,6 +63,8 @@ public abstract class AbstractFileSystem<F extends AbstractFileSystem<F, P, S>, 
         this.provider = provider;
         this.name = name;
         this.fileSystemIO = fileSystemIO.apply( path, env );
+
+        readOnly = FileSystemUtils.isTrue( env, "readOnly" );
     }
 
     public URI getUri()
@@ -117,8 +119,7 @@ public abstract class AbstractFileSystem<F extends AbstractFileSystem<F, P, S>, 
     public Iterable<Path> getRootDirectories()
     {
         ArrayList<Path> pathArr = new ArrayList<>();
-        pathArr.add( createPath( new char[]
-        {
+        pathArr.add( createPath( new char[]{
             '/'
         } ) );
         return pathArr;
@@ -128,16 +129,13 @@ public abstract class AbstractFileSystem<F extends AbstractFileSystem<F, P, S>, 
     public P getPath( String first, String... more )
     {
         String path;
-        if( more.length == 0 )
-        {
+        if( more.length == 0 ) {
             path = first;
         }
-        else
-        {
+        else {
             StringJoiner j = new StringJoiner( "/" );
             j.add( first );
-            for( String segment : more )
-            {
+            for( String segment: more ) {
                 j.add( segment );
             }
             path = j.toString();
@@ -161,8 +159,7 @@ public abstract class AbstractFileSystem<F extends AbstractFileSystem<F, P, S>, 
     public Iterable<FileStore> getFileStores()
     {
         ArrayList<FileStore> list = new ArrayList<>( 1 );
-        list.add( createFileStore( createPath( new char[]
-        {
+        list.add( createFileStore( createPath( new char[]{
             '/'
         } ) ) );
         return list;
@@ -182,19 +179,16 @@ public abstract class AbstractFileSystem<F extends AbstractFileSystem<F, P, S>, 
     public PathMatcher getPathMatcher( String syntaxAndInput )
     {
         int pos = syntaxAndInput.indexOf( ':' );
-        if( pos <= 0 || pos == syntaxAndInput.length() )
-        {
+        if( pos <= 0 || pos == syntaxAndInput.length() ) {
             throw new IllegalArgumentException();
         }
         String syntax = syntaxAndInput.substring( 0, pos );
         String input = syntaxAndInput.substring( pos + 1 );
         String expr;
-        if( syntax.equals( REGEX_SYNTAX ) )
-        {
+        if( syntax.equals( REGEX_SYNTAX ) ) {
             expr = input;
         }
-        else
-        {
+        else {
             throw new UnsupportedOperationException( "Syntax '" + syntax + "' not recognized" );
         }
 

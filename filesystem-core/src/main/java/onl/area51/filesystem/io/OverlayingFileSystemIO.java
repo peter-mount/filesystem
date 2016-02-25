@@ -106,13 +106,15 @@ public abstract class OverlayingFileSystemIO
     public InputStream newInputStream( char[] path )
             throws IOException
     {
-        try {
-            return delegate.newInputStream( path );
+        if( exists( path ) ) {
+            try {
+                return delegate.newInputStream( path );
+            }
+            catch( FileNotFoundException ex ) {
+            }
         }
-        catch( FileNotFoundException ex ) {
-            retrieve( path );
-            return delegate.newInputStream( path );
-        }
+        retrieve( path );
+        return delegate.newInputStream( path );
     }
 
     @Override
@@ -156,6 +158,7 @@ public abstract class OverlayingFileSystemIO
     public BasicFileAttributes getAttributes( char[] path )
             throws IOException
     {
+        exists( path );
         return delegate.getAttributes( path );
     }
 
