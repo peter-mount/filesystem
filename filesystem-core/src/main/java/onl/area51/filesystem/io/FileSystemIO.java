@@ -35,8 +35,6 @@ import java.util.Set;
  * Class that performs the actual IO to the underlying store
  *
  * @author peter
- * @param <P>
- * @param <A>
  */
 public interface FileSystemIO
         extends Closeable

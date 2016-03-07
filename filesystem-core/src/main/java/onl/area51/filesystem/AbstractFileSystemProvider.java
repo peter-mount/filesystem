@@ -46,15 +46,18 @@ public abstract class AbstractFileSystemProvider<F extends AbstractFileSystem<F,
 
     public final synchronized String getCacheBase()
     {
-        if( cacheBase == null ) {
+        if( cacheBase == null )
+        {
             String base = System.getProperty( getClass().getName() );
-            if( base == null || base.trim().isEmpty() ) {
-                base = System.getProperty( "user.home" ) + "/.area51/" + getScheme();
+            if( base == null || base.trim().isEmpty() )
+            {
+                base = System.getProperty( "area51.cacheBase" );
             }
-            if( base == null || base.trim().isEmpty() ) {
-                throw new IllegalStateException( "Invalid cacheBase" );
+            if( base == null || base.trim().isEmpty() )
+            {
+                base = System.getProperty( "user.home" ) + "/.area51/";
             }
-            cacheBase = base;
+            cacheBase = base + getScheme();
         }
         return cacheBase;
     }
@@ -66,7 +69,8 @@ public abstract class AbstractFileSystemProvider<F extends AbstractFileSystem<F,
             throws IOException
     {
         String scheme = uri.getScheme();
-        if( (scheme == null) || !scheme.equalsIgnoreCase( getScheme() ) ) {
+        if( (scheme == null) || !scheme.equalsIgnoreCase( getScheme() ) )
+        {
             throw new IllegalArgumentException( "URI scheme is not '" + getScheme() + "'" );
         }
 
@@ -80,10 +84,11 @@ public abstract class AbstractFileSystemProvider<F extends AbstractFileSystem<F,
 
     private F createFileSystem( URI uri, Map<String, ?> env )
     {
-        try {
+        try
+        {
             return createFileSystem( uri, uriToPath( uri ).toRealPath(), env );
-        }
-        catch( IOException ex ) {
+        } catch( IOException ex )
+        {
             throw new UncheckedIOException( ex );
         }
     }
@@ -98,7 +103,8 @@ public abstract class AbstractFileSystemProvider<F extends AbstractFileSystem<F,
 
     public final void deleteFileSystem( FileSystem fs )
     {
-        if( fs instanceof AbstractFileSystem ) {
+        if( fs instanceof AbstractFileSystem )
+        {
             filesystems.remove( ((AbstractFileSystem) fs).getUri() );
         }
     }
@@ -107,7 +113,8 @@ public abstract class AbstractFileSystemProvider<F extends AbstractFileSystem<F,
     public final FileSystem newFileSystem( Path path, Map<String, ?> env )
             throws IOException
     {
-        if( path.getFileSystem() != FileSystems.getDefault() ) {
+        if( path.getFileSystem() != FileSystems.getDefault() )
+        {
             throw new UnsupportedOperationException();
         }
 
@@ -125,10 +132,11 @@ public abstract class AbstractFileSystemProvider<F extends AbstractFileSystem<F,
     public final FileSystem getFileSystem( URI uri )
     {
         URI fsUri = FileSystemUtils.getFileSystemURI( uri );
-        try {
+        try
+        {
             return newFileSystem( uri, new HashMap<>() );
-        }
-        catch( IOException ex ) {
+        } catch( IOException ex )
+        {
             throw new FileSystemNotFoundException( fsUri.toString() );
         }
     }
