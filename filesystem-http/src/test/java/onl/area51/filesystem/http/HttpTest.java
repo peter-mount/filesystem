@@ -23,10 +23,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.HashMap;
+import java.util.Map;
 import onl.area51.filesystem.cache.CacheFileSystemProvider;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import uk.trainwatch.util.MapBuilder;
 
 /**
  *
@@ -39,29 +40,26 @@ public class HttpTest
     private static final String HTTP_PREFIX = "cache://http.test";
     private static final String HTTPS_PREFIX = "cache://https.test";
 
+    private static Map<String, Object> createMap( String uri )
+    {
+        Map<String, Object> map = new HashMap<>();
+        map.put( "fileSystemType", "flat" );
+        map.put( "fileSystemWrapper", "http" );
+        map.put( "remoteUrl", uri );
+        map.put( "maxAge", "60000" );
+        map.put( "clearOnStartup", "true" );
+        return map;
+    }
+
     @BeforeClass
     public static void setUpClass()
             throws IOException
     {
         System.setProperty( CacheFileSystemProvider.class.getName(), BASE_FILE.toString() );
 
-        FileSystems.newFileSystem( URI.create( HTTP_PREFIX ),
-                                   MapBuilder.<String, Object>builder()
-                                   .add( "fileSystemType", "flat" )
-                                   .add( "fileSystemWrapper", "http" )
-                                   .add( "remoteUrl", "http://uktra.in/" )
-                                   .add( "maxAge", "60000" )
-                                   .add( "clearOnStartup", "true" )
-                                   .build() );
+        FileSystems.newFileSystem( URI.create( HTTP_PREFIX ), createMap( "http://uktra.in/" ) );
 
-        FileSystems.newFileSystem( URI.create( HTTPS_PREFIX ),
-                                   MapBuilder.<String, Object>builder()
-                                   .add( "fileSystemType", "flat" )
-                                   .add( "fileSystemWrapper", "http" )
-                                   .add( "remoteUrl", "https://uktra.in/" )
-                                   .add( "maxAge", "60000" )
-                                   .add( "clearOnStartup", "true" )
-                                   .build() );
+        FileSystems.newFileSystem( URI.create( HTTPS_PREFIX ), createMap( "https://uktra.in/" ) );
     }
 
     @Test
@@ -94,9 +92,11 @@ public class HttpTest
         Path path = Paths.get( URI.create( prefix + "/images/375-logo.png" ) );
 
         // Just prove we can read a file
-        try( InputStream is = Files.newInputStream( path, StandardOpenOption.READ ) ) {
+        try( InputStream is = Files.newInputStream( path, StandardOpenOption.READ ) )
+        {
             int c = 0;
-            while( is.read() > -1 ) {
+            while( is.read() > -1 )
+            {
                 c++;
             }
         }

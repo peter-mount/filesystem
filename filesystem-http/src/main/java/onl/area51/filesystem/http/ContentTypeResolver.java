@@ -19,9 +19,9 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.http.entity.ContentType;
 import static org.apache.http.entity.ContentType.*;
-import uk.trainwatch.util.MapBuilder;
 
 /**
  * Utility class to handle the resolution of {@link ContentType} based on a file name.
@@ -37,19 +37,17 @@ public class ContentTypeResolver
 
     static
     {
-        CONTENT_TYPES = MapBuilder.<String, ContentType>builder()
-                .concurrent()
-                .add( ".htm", TEXT_HTML )
-                .add( ".html", TEXT_HTML )
-                .add( ".jpg", JPG )
-                .add( ".jpeg", JPG )
-                .add( ".json", APPLICATION_JSON )
-                .add( ".log", TEXT_PLAIN )
-                .add( ".png", PNG )
-                .add( ".text", TEXT_PLAIN )
-                .add( ".txt", TEXT_PLAIN )
-                .add( ".xml", TEXT_XML )
-                .build();
+        CONTENT_TYPES = new ConcurrentHashMap<>();
+        CONTENT_TYPES.put( ".htm", TEXT_HTML );
+        CONTENT_TYPES.put( ".html", TEXT_HTML );
+        CONTENT_TYPES.put( ".jpg", JPG );
+        CONTENT_TYPES.put( ".jpeg", JPG );
+        CONTENT_TYPES.put( ".json", APPLICATION_JSON );
+        CONTENT_TYPES.put( ".log", TEXT_PLAIN );
+        CONTENT_TYPES.put( ".png", PNG );
+        CONTENT_TYPES.put( ".text", TEXT_PLAIN );
+        CONTENT_TYPES.put( ".txt", TEXT_PLAIN );
+        CONTENT_TYPES.put( ".xml", TEXT_XML );
     }
 
     public static void register( String suffix, ContentType ct )
