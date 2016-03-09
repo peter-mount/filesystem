@@ -22,7 +22,6 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import onl.area51.filesystem.http.ContentTypeResolver;
 import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.util.Args;
@@ -39,13 +38,12 @@ public class PathEntity
 
     protected final Path file;
 
-    @SuppressWarnings( "OverridableMethodCallInConstructor" )
+    @SuppressWarnings("OverridableMethodCallInConstructor")
     public PathEntity( final Path file, final ContentType contentType )
     {
         super();
         this.file = Args.notNull( file, "Path" );
-        if( contentType != null )
-        {
+        if( contentType != null ) {
             setContentType( contentType.toString() );
         }
     }
@@ -64,11 +62,10 @@ public class PathEntity
     @Override
     public long getContentLength()
     {
-        try
-        {
+        try {
             return Files.size( file );
-        } catch( IOException ex )
-        {
+        }
+        catch( IOException ex ) {
             throw new UncheckedIOException( ex );
         }
     }
@@ -107,4 +104,40 @@ public class PathEntity
         return super.clone();
     }
 
+    public static class SizeOnly
+            extends PathEntity
+    {
+
+        public SizeOnly( final Path file, final ContentType contentType )
+        {
+            super( file, contentType );
+        }
+
+        public SizeOnly( final Path file )
+        {
+            super( file );
+        }
+
+        @Override
+        public InputStream getContent()
+                throws IOException
+        {
+            return new InputStream()
+            {
+                @Override
+                public int read()
+                        throws IOException
+                {
+                    return -1;
+                }
+            };
+        }
+
+        @Override
+        public void writeTo( OutputStream outstream )
+                throws IOException
+        {
+        }
+
+    }
 }
