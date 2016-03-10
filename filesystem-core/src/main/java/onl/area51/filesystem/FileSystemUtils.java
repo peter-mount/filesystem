@@ -15,8 +15,6 @@
  */
 package onl.area51.filesystem;
 
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,6 +24,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -55,7 +57,26 @@ public class FileSystemUtils
                                                                                          return t;
                                                                                      } );
 
-    private static final File CONFIG_DIR = new File( System.getProperty( "area51.filesystem", System.getProperty( "user.home" ) + "/.area51/cache.config" ) );
+    private static String CACHE_BASE;
+
+    public static synchronized String getCacheBase()
+    {
+        if( CACHE_BASE == null ) {
+            CACHE_BASE = System.getenv( "FILESYSTEM_BASE" );
+            if( CACHE_BASE == null || CACHE_BASE.trim().isEmpty() ) {
+                CACHE_BASE = System.getProperty( "area51.cacheBase" );
+            }
+            if( CACHE_BASE == null || CACHE_BASE.trim().isEmpty() ) {
+                CACHE_BASE = System.getProperty( "user.home" ) + "/.area51/";
+            }
+        }
+        return CACHE_BASE;
+    }
+
+    public static Path getCacheDirectory()
+    {
+        return Paths.get( getCacheBase() );
+    }
 
     /**
      * Schedule a task repeatedly
@@ -351,9 +372,9 @@ public class FileSystemUtils
     private static void readConfig( Map<String, Object> newEnv, URI uri )
     {
         // Read in any config from file system
-        File file = new File( CONFIG_DIR, uri.getAuthority() + ".properties" );
-        if( file.exists() ) {
-            try( Reader r = new FileReader( file ) ) {
+        Path path = getCacheDirectory().resolve( uri.getAuthority() + ".properties" );
+        if( Files.isRegularFile( path, LinkOption.NOFOLLOW_LINKS ) ) {
+            try( Reader r = Files.newBufferedReader( path ) ) {
                 Properties p = new Properties();
                 p.load( r );
 
@@ -396,7 +417,7 @@ public class FileSystemUtils
 
     // buffer size used for reading and writing
     private static final int BUFFER_SIZE = 8192;
-    
+
     public static long copy( InputStream source, OutputStream sink )
             throws IOException
     {

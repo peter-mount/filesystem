@@ -42,7 +42,7 @@ import org.kohsuke.MetaInfServices;
  *
  * @author peter
  */
-@MetaInfServices( OverlayingFileSystemIO.class )
+@MetaInfServices(OverlayingFileSystemIO.class)
 public class Http
         extends OverlayingFileSystemIO.Synchronous
 {
@@ -63,27 +63,22 @@ public class Http
 
         userAgent = FileSystemUtils.getString( env, USER_AGENT, DEFAULT_USER_AGENT );
 
-        try
-        {
+        try {
             Object url = Objects.requireNonNull( FileSystemUtils.get( env, URL ), URL + " not defined" );
-            if( url instanceof String )
-            {
+            if( url instanceof String ) {
                 remoteUrl = new URI( url.toString() );
             }
-            else if( url instanceof URI )
-            {
+            else if( url instanceof URI ) {
                 remoteUrl = (URI) url;
             }
-            else if( url instanceof URL )
-            {
+            else if( url instanceof URL ) {
                 remoteUrl = ((URL) url).toURI();
             }
-            else
-            {
+            else {
                 throw new IllegalArgumentException( "Unsupported URL " + url );
             }
-        } catch( URISyntaxException ex )
-        {
+        }
+        catch( URISyntaxException ex ) {
             throw new IllegalArgumentException( ex );
         }
 
@@ -94,24 +89,19 @@ public class Http
     protected void retrievePath( String path )
             throws IOException
     {
-        try
-        {
-            if( path == null || path.isEmpty() )
-            {
+        try {
+            if( path == null || path.isEmpty() ) {
                 throw new FileNotFoundException( "/" );
             }
 
             StringBuilder b = new StringBuilder().append( remoteUrl.getPath() );
-            if( b.length() == 0 || b.charAt( b.length() - 1 ) != '/' )
-            {
+            if( b.length() == 0 || b.charAt( b.length() - 1 ) != '/' ) {
                 b.append( '/' );
             }
-            if( path.startsWith( "/" ) )
-            {
+            if( path.startsWith( "/" ) ) {
                 b.append( path, 1, path.length() );
             }
-            else
-            {
+            else {
                 b.append( path );
             }
             String p = b.toString();
@@ -128,16 +118,13 @@ public class Http
             int returnCode = response.getStatusLine().getStatusCode();
             LOG.log( Level.INFO, () -> "ReturnCode " + returnCode + ": " + response.getStatusLine().getReasonPhrase() );
 
-            switch( returnCode )
-            {
+            switch( returnCode ) {
                 case 200:
                 case 304:
-                    try( InputStream is = response.getEntity().getContent() )
-                    {
+                    try( InputStream is = response.getEntity().getContent() ) {
                         try( OutputStream os = getDelegate().newOutputStream( path.toCharArray(),
                                                                               StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING,
-                                                                              StandardOpenOption.WRITE ) )
-                        {
+                                                                              StandardOpenOption.WRITE ) ) {
                             FileSystemUtils.copy( is, os );
                         }
                     }
@@ -148,8 +135,8 @@ public class Http
                 default:
                     throw new FileNotFoundException( path );
             }
-        } catch( URISyntaxException ex )
-        {
+        }
+        catch( URISyntaxException ex ) {
             throw new IOException( path, ex );
         }
     }

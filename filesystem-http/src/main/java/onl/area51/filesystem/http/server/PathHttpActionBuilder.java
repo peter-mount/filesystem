@@ -19,8 +19,6 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.Objects;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import onl.area51.filesystem.http.PathEntity;
 import onl.area51.httpd.HttpAction;
 import org.apache.http.HttpConnection;
@@ -47,26 +45,18 @@ public interface PathHttpActionBuilder
         } );
     }
 
-    default PathHttpActionBuilder logPath( Logger logger )
-    {
-        return add( ( req, resp, ctx, path ) -> logger.log( Level.INFO, () -> req.getRequestLine().getMethod() + ": " + req.getRequestLine().getUri() ) );
-    }
-
     default PathHttpActionBuilder returnPathContent()
     {
         return add( ( req, resp, ctx, path ) -> {
-            HttpCoreContext coreContext = HttpCoreContext.adapt( ctx );
-            HttpConnection conn = coreContext.getConnection( HttpConnection.class );
             resp.setStatusCode( HttpStatus.SC_OK );
-            resp.setEntity( new PathEntity( path ) );
+            PathEntity body = new PathEntity( path );
+            resp.setEntity( body );
         } );
     }
 
     default PathHttpActionBuilder returnPathSizeOnly()
     {
         return add( ( req, resp, ctx, path ) -> {
-            HttpCoreContext coreContext = HttpCoreContext.adapt( ctx );
-            HttpConnection conn = coreContext.getConnection( HttpConnection.class );
             resp.setStatusCode( HttpStatus.SC_OK );
             resp.setEntity( new PathEntity.SizeOnly( path ) );
         } );

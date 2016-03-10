@@ -23,6 +23,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,6 +60,12 @@ public interface FileSystemMap
             return this;
         }
 
+        default Builder addFileSystems( Stream<Map<String, Object>> s )
+        {
+            s.forEach( this::addFileSystem );
+            return this;
+        }
+
         FileSystemMap build();
     }
 
@@ -91,7 +98,9 @@ public interface FileSystemMap
                     }
 
                     URI uri = new URI( FileSystemUtils.getString( cfg, "uri", "local://" + name ) );
-                    FileSystem fileSystem = FileSystems.newFileSystem( uri, cfg );
+
+                    Map<String, Object> env = (Map<String, Object>) cfg.get( "environment" );
+                    FileSystem fileSystem = FileSystems.newFileSystem( uri, env == null ? new HashMap<>() : env );
 
                     config.put( prefix, cfg );
                     prefixes.put( prefix, fileSystem );
@@ -148,7 +157,7 @@ public interface FileSystemMap
                     public String getPrefix( String target )
                     {
                         int s1 = target.indexOf( '/' ), s2 = s1 > -1 && s1 < target.length() ? target.indexOf( '/', s1 + 1 ) : -1;
-                        return s1 > -1 && s2 > s1 ? target.substring( s1, s2 ) : null;
+                        return s1 > -1 && s2 > s1 ? target.substring( s1, s2 + 1 ) : null;
                     }
 
                     @Override
