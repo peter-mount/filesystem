@@ -45,7 +45,7 @@ public class LocalPath
     public URI toUri()
     {
         try {
-            return new URI( "cache", fs.getCachePath().toString(), String.valueOf( toAbsolutePath().path ), null, null );
+            return new URI( "local", fs.getCachePath().toString(), String.valueOf( toAbsolutePath().path ), null, null );
         }
         catch( Exception ex ) {
             throw new AssertionError( ex );

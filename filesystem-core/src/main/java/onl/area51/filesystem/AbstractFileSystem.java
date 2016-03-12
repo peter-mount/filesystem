@@ -50,18 +50,15 @@ public abstract class AbstractFileSystem<F extends AbstractFileSystem<F, P, S>, 
     private final URI uri;
     private final FileSystemProvider provider;
     private boolean readOnly = false;
-    private final String name;
     private final FileSystemIO fileSystemIO;
 
     protected AbstractFileSystem( URI uri, FileSystemProvider provider, Map<String, ?> env,
                                   Path path,
-                                  BiFunction<Path, Map<String, ?>, FileSystemIO> fileSystemIO,
-                                  String name )
+                                  BiFunction<Path, Map<String, ?>, FileSystemIO> fileSystemIO )
             throws IOException
     {
         this.uri = uri;
         this.provider = provider;
-        this.name = name;
         this.fileSystemIO = fileSystemIO.apply( path, env );
 
         readOnly = FileSystemUtils.isTrue( env, "readOnly" );
@@ -80,11 +77,6 @@ public abstract class AbstractFileSystem<F extends AbstractFileSystem<F, P, S>, 
     public abstract P createPath( char[] p );
 
     public abstract S createFileStore( P p );
-
-    public String getName()
-    {
-        return name;
-    }
 
     public FileSystemIO getFileSystemIO()
     {

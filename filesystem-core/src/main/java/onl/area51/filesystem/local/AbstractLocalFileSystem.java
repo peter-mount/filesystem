@@ -38,7 +38,7 @@ public abstract class AbstractLocalFileSystem<F extends AbstractFileSystem<F, P,
                                     BiFunction<Path, Map<String, ?>, FileSystemIO> fileSystemIO )
             throws IOException
     {
-        super( uri, provider, env, cachePath, fileSystemIO, cachePath.getName( cachePath.getNameCount() - 1 ).toString() );
+        super( uri, provider, env, cachePath, fileSystemIO );
         
         this.cachePath = getFileSystemIO().getBaseDirectory();
 

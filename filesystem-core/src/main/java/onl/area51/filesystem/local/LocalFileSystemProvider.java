@@ -15,7 +15,6 @@
  */
 package onl.area51.filesystem.local;
 
-import onl.area51.filesystem.io.LocalFileSystemIO;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
