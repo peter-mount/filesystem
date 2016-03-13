@@ -15,6 +15,7 @@
  */
 package onl.area51.filesystem.io;
 
+import onl.area51.filesystem.io.overlay.OverlayFileSystemIO;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -101,7 +102,7 @@ public class FileSystemIORepository
                  .collect( Collectors.joining( ", ", "Available FileSystemIO implementations: ", "" ) )
         );
 
-        forEach( OverlayingFileSystemIO.class,
+        forEach( OverlayFileSystemIO.class,
                  l -> {
                      try {
                          Class<FileSystemIO> clazz = (Class<FileSystemIO>) Class.forName( l );
@@ -156,20 +157,22 @@ public class FileSystemIORepository
 
         Object o = FileSystemUtils.get( env, WRAPPER );
         if( o != null ) {
-            BiFunction<FileSystemIO, Map<String, ?>, FileSystemIO> mapper = null;
+            BiFunction<FileSystemIO, Map<String, ?>, FileSystemIO> mapper;
 
             if( o instanceof BiFunction ) {
                 mapper = (BiFunction<FileSystemIO, Map<String, ?>, FileSystemIO>) o;
+                io = mapper.apply( io, env );
             }
             else if( o instanceof String ) {
-                mapper = OVERLAYS.get( o.toString().trim().toLowerCase() );
-            }
-
-            if( mapper == null ) {
-                throw new IllegalArgumentException( "Unsupported " + WRAPPER + ": " + o );
-            }
-            else {
-                io = mapper.apply( io, env );
+                for( String n: o.toString().split( "," ) ) {
+                    mapper = OVERLAYS.get( n.trim().toLowerCase() );
+                    if( mapper == null ) {
+                        throw new IllegalArgumentException( "Unsupported " + WRAPPER + ": " + n );
+                    }
+                    else {
+                        io = mapper.apply( io, env );
+                    }
+                }
             }
         }
 

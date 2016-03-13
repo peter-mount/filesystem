@@ -13,25 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package onl.area51.filesystem.s3;
+package onl.area51.filesystem.io.overlay;
 
-import java.util.Map;
-import onl.area51.filesystem.io.FileSystemIO;
-import onl.area51.filesystem.io.overlay.OverlayFileSystemIO;
-import onl.area51.filesystem.io.overlay.PathSynchronizer;
-import org.kohsuke.MetaInfServices;
+import java.io.IOException;
 
 /**
  *
  * @author peter
  */
-@MetaInfServices(OverlayFileSystemIO.class)
-public class S3
-        extends OverlayFileSystemIO
+public interface RemoteRetriever
 {
 
-    public S3( FileSystemIO delegate, Map<String, ?> env )
-    {
-        super( delegate, new PathSynchronizer(), new S3Retriever( delegate, env ) );
-    }
+    void retrieve( char[] path )
+            throws IOException;
 }

@@ -13,25 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package onl.area51.filesystem.s3;
+package onl.area51.filesystem.io.overlay;
 
-import java.util.Map;
-import onl.area51.filesystem.io.FileSystemIO;
-import onl.area51.filesystem.io.overlay.OverlayFileSystemIO;
-import onl.area51.filesystem.io.overlay.PathSynchronizer;
-import org.kohsuke.MetaInfServices;
+import java.io.IOException;
 
 /**
  *
  * @author peter
  */
-@MetaInfServices(OverlayFileSystemIO.class)
-public class S3
-        extends OverlayFileSystemIO
+public interface RemoteSender
 {
 
-    public S3( FileSystemIO delegate, Map<String, ?> env )
-    {
-        super( delegate, new PathSynchronizer(), new S3Retriever( delegate, env ) );
-    }
+    /**
+     * Submit a path to the sender. this should then send at some future time.
+     *
+     * @param path
+     *
+     * @throws IOException
+     */
+    void send( char[] path )
+            throws IOException;
 }

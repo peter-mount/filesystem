@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package onl.area51.filesystem.http.client;
+package onl.area51.filesystem.s3;
 
 import java.util.Map;
 import onl.area51.filesystem.io.FileSystemIO;
@@ -22,21 +22,16 @@ import onl.area51.filesystem.io.overlay.PathSynchronizer;
 import org.kohsuke.MetaInfServices;
 
 /**
- * {@link OverlayFileSystemIO} implementation to retrieve content from a remote HTTP/HTTPS server
  *
  * @author peter
  */
 @MetaInfServices(OverlayFileSystemIO.class)
-public class Http
+public class S3Read
         extends OverlayFileSystemIO
 {
 
-    public Http( FileSystemIO delegate, Map<String, ?> env )
+    public S3Read( FileSystemIO delegate, Map<String, ?> env )
     {
-        super( delegate,
-               new PathSynchronizer(),
-               new HttpRetriever( delegate, env )
-        );
+        super( delegate, new PathSynchronizer(), new S3Retriever( delegate, env ) );
     }
-
 }

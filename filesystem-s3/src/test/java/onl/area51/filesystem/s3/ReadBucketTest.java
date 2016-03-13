@@ -15,7 +15,6 @@
  */
 package onl.area51.filesystem.s3;
 
-import onl.area51.filesystem.s3.CommonTestUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -48,7 +47,7 @@ public class ReadBucketTest
     {
         Map<String, Object> map = new HashMap<>();
         map.put( "fileSystemType", "flat" );
-        map.put( "fileSystemWrapper", "s3" );
+        map.put( "fileSystemWrapper", "s3read" );
         map.put( "bucket", "test.area51.onl" );
         map.put( "maxAge", "60000" );
         map.put( "clearOnStartup", "true" );

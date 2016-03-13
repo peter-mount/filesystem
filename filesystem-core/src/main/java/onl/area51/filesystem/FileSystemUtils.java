@@ -30,6 +30,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -41,6 +42,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import onl.area51.filesystem.io.FileSystemIO;
 
 /**
  * General utility functions
@@ -447,4 +449,31 @@ public class FileSystemUtils
             return defaultValue;
         }
     }
+
+    /**
+     * Copy from an InputStream and write to the filesystem
+     *
+     * @param src
+     * @param path
+     *
+     * @throws IOException
+     */
+    public static void copyFromRemote( IOSupplier<InputStream> src, FileSystemIO io, char[] path )
+            throws IOException
+    {
+        try( InputStream is = src.get() ) {
+            try( OutputStream os = io.newOutputStream( path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE ) ) {
+                FileSystemUtils.copy( is, os );
+            }
+        }
+    }
+
+    @FunctionalInterface
+    public static interface IOSupplier<T>
+    {
+
+        T get()
+                throws IOException;
+    }
+
 }
