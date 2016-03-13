@@ -62,6 +62,12 @@ public interface FileSystemIO
     void deleteFile( char path[], boolean exists )
             throws IOException;
 
+    boolean isFile( char path[] )
+            throws IOException;
+
+    boolean isDirectory( char path[] )
+            throws IOException;
+
     SeekableByteChannel newByteChannel( char path[], Set<? extends OpenOption> options, FileAttribute<?>... attrs )
             throws IOException;
 

@@ -130,6 +130,20 @@ public abstract class AbstractLocalPath<F extends AbstractLocalFileSystem<F, P, 
     }
 
     @Override
+    public boolean isFile()
+            throws IOException
+    {
+        return fs.getFileSystemIO().isFile( getResolvedPath() );
+    }
+
+    @Override
+    public boolean isDirectory()
+            throws IOException
+    {
+        return fs.getFileSystemIO().isDirectory( getResolvedPath() );
+    }
+
+    @Override
     public SeekableByteChannel newByteChannel( Set<? extends OpenOption> options, FileAttribute<?>... attrs )
             throws IOException
     {

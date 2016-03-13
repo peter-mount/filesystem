@@ -84,6 +84,20 @@ public abstract class OverlayingFileSystemIO
     }
 
     @Override
+    public boolean isDirectory( char[] path )
+            throws IOException
+    {
+        return delegate.isDirectory( path );
+    }
+
+    @Override
+    public boolean isFile( char[] path )
+            throws IOException
+    {
+        return delegate.isFile( path );
+    }
+
+    @Override
     public boolean exists( char[] path )
             throws IOException
     {

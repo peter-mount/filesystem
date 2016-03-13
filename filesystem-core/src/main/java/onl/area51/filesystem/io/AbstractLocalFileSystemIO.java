@@ -178,6 +178,20 @@ public abstract class AbstractLocalFileSystemIO
     }
 
     @Override
+    public boolean isFile( char[] path )
+            throws IOException
+    {
+        return toFile( path ).isFile();
+    }
+
+    @Override
+    public boolean isDirectory( char[] path )
+            throws IOException
+    {
+        return toFile( path ).isDirectory();
+    }
+    
+    @Override
     public final SeekableByteChannel newByteChannel( char[] path, Set<? extends OpenOption> options, FileAttribute<?>... attrs )
             throws IOException
     {

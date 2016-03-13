@@ -743,6 +743,12 @@ public abstract class AbstractPath<F extends AbstractFileSystem<F, P, ?>, P exte
     public abstract boolean isSameFile( Path other )
             throws IOException;
 
+    public abstract boolean isFile()
+            throws IOException;
+
+    public abstract boolean isDirectory()
+            throws IOException;
+
     public abstract SeekableByteChannel newByteChannel( Set<? extends OpenOption> options, FileAttribute<?>... attrs )
             throws IOException;
 
