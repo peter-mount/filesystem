@@ -26,6 +26,7 @@ import java.nio.file.CopyOption;
 import java.nio.file.DirectoryStream;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
@@ -39,6 +40,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
+import onl.area51.filesystem.FileSystemUtils;
 
 /**
  * A wrapper that delegates to another {@link FileSystemIO} instance with a hook implemented for retrieving a path from another location if it does not exist.
@@ -193,6 +196,34 @@ public abstract class OverlayingFileSystemIO
     public void expire()
     {
         delegate.expire();
+    }
+
+    /**
+     * Copy from an InputStream and write to the filesystem
+     *
+     * @param src
+     * @param path
+     *
+     * @throws IOException
+     */
+    public void copyFromRemote( IOSupplier<InputStream> src, char[] path )
+            throws IOException
+    {
+        try( InputStream is = src.get() ) {
+            try( OutputStream os = getDelegate().newOutputStream( path,
+                                                                  StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING,
+                                                                  StandardOpenOption.WRITE ) ) {
+                FileSystemUtils.copy( is, os );
+            }
+        }
+    }
+
+    @FunctionalInterface
+    public static interface IOSupplier<T>
+    {
+
+        T get()
+                throws IOException;
     }
 
     public static abstract class Synchronous

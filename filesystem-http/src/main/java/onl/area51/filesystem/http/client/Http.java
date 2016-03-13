@@ -121,13 +121,7 @@ public class Http
             switch( returnCode ) {
                 case 200:
                 case 304:
-                    try( InputStream is = response.getEntity().getContent() ) {
-                        try( OutputStream os = getDelegate().newOutputStream( path.toCharArray(),
-                                                                              StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING,
-                                                                              StandardOpenOption.WRITE ) ) {
-                            FileSystemUtils.copy( is, os );
-                        }
-                    }
+                    copyFromRemote( () -> response.getEntity().getContent(), path.toCharArray() );
                     break;
 
                 case 404:

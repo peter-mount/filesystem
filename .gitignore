@@ -3,3 +3,5 @@
 /filesystem-http/nbproject/
 /filesystem-ftp/nbproject/
 /filesystem-ftp/target/
+/filesystem-s3/target/
+/filesystem-memory/target/

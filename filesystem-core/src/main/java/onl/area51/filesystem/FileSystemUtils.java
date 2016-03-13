@@ -431,5 +431,20 @@ public class FileSystemUtils
             nread += n;
         }
         return nread;
-    }    
+    }
+
+    public static <E extends Enum<E>> E getEnum( Class<E> clazz, Map<String, ?> env, String key, E defaultValue )
+    {
+        String v = getString( env, key );
+        if( v == null ) {
+            return defaultValue;
+        }
+
+        try {
+            return Enum.valueOf( clazz, v );
+        }
+        catch( IllegalArgumentException ex ) {
+            return defaultValue;
+        }
+    }
 }
