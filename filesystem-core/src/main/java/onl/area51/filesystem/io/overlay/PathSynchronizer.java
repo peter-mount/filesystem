@@ -68,42 +68,48 @@ public class PathSynchronizer
             throws IOException
     {
         lock.lock();
-        try {
+        try
+        {
             Condition c = conditions.get( key );
-            if( c == null ) {
+            if( c == null )
+            {
                 c = lock.newCondition();
                 conditions.put( key, c );
                 lock.unlock();
-                try {
+                try
+                {
                     Future<Void> f = executorService.submit( t );
                     f.get();
                 }
-                finally {
+                finally
+                {
                     lock.lock();
                     c.signalAll();
                     conditions.remove( key );
                 }
             }
-            else {
+            else
+            {
                 c.await();
             }
-        }
-        catch( InterruptedException ex ) {
+        } catch( InterruptedException ex )
+        {
             throw new IOException( ex );
-        }
-        catch( ExecutionException ex ) {
+        } catch( ExecutionException ex )
+        {
             Throwable tr = ex.getCause();
-            if( tr instanceof IOException ) {
-                throw (IOException) tr;
+            if( tr instanceof UncheckedIOException )
+            {
+                IOException cause = ((UncheckedIOException) tr).getCause();
+                throw new IOException(cause.getMessage(), cause);
             }
-            if( tr instanceof UncheckedIOException ) {
-                throw ((UncheckedIOException) tr).getCause();
-            }
-            else {
-                throw new IOException( tr );
+            else
+            {
+                throw new IOException( tr.getMessage(),tr );
             }
         }
-        finally {
+        finally
+        {
             lock.unlock();
         }
     }
@@ -111,7 +117,8 @@ public class PathSynchronizer
     public final void execute( char[] path, Callable<Void> t )
             throws IOException
     {
-        if( path == null || path.length == 0 ) {
+        if( path == null || path.length == 0 )
+        {
             throw new FileNotFoundException( "/" );
         }
         execute( String.valueOf( path ), t );
@@ -124,10 +131,12 @@ public class PathSynchronizer
         executorService.shutdownNow();
 
         lock.lock();
-        try {
+        try
+        {
             conditions.values().forEach( Condition::signalAll );
         }
-        finally {
+        finally
+        {
             lock.unlock();
         }
     }
