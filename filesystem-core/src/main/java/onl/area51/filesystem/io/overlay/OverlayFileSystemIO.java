@@ -20,11 +20,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.OpenOption;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import onl.area51.filesystem.io.FileSystemIO;
 import onl.area51.filesystem.io.FileSystemIOWrapper;
 
 /**
- * A wrapper that delegates to another {@link FileSystemIO} instance with a hook implemented for retrieving a path from another location if it does not exist.
+ * A wrapper that delegates to another {@link FileSystemIO} instance with a hook implemented for retrieving a path from another
+ * location if it does not exist.
  *
  * @author peter
  */
@@ -32,36 +35,51 @@ public abstract class OverlayFileSystemIO
         extends FileSystemIOWrapper
 {
 
+    private static final Logger LOG = Logger.getLogger( "filesystem" );
+
     private final PathSynchronizer pathSynchronizer;
-    private final RemoteRetriever remoteRetriever;
-    private final RemoteSender remoteSender;
+    private final OverlayRetriever retriever;
+    private final OverlaySender sender;
 
-    public OverlayFileSystemIO( FileSystemIO delegate, RemoteRetriever remoteRetriever )
+    public OverlayFileSystemIO( FileSystemIO delegate, OverlayRetriever retriever )
     {
-        this( delegate, null, remoteRetriever );
+        this( delegate, null, retriever );
     }
 
-    public OverlayFileSystemIO( FileSystemIO delegate, PathSynchronizer pathSynchronizer, RemoteRetriever remoteRetriever )
+    public OverlayFileSystemIO( FileSystemIO delegate, PathSynchronizer pathSynchronizer, OverlayRetriever retriever )
     {
-        this( delegate, pathSynchronizer, remoteRetriever, null );
+        this( delegate, pathSynchronizer, retriever, null );
     }
 
-    public OverlayFileSystemIO( FileSystemIO delegate, PathSynchronizer pathSynchronizer, RemoteRetriever remoteRetriever, RemoteSender remoteSender )
+    public OverlayFileSystemIO( FileSystemIO delegate, OverlaySender sender )
+    {
+        this( delegate, null, sender );
+    }
+
+    public OverlayFileSystemIO( FileSystemIO delegate, PathSynchronizer pathSynchronizer, OverlaySender sender )
+    {
+        this( delegate, pathSynchronizer, null, sender );
+    }
+
+    public OverlayFileSystemIO( FileSystemIO delegate, PathSynchronizer pathSynchronizer, OverlayRetriever retriever,
+                                OverlaySender sender )
     {
         super( delegate );
         this.pathSynchronizer = pathSynchronizer;
-        this.remoteRetriever = remoteRetriever;
-        this.remoteSender = remoteSender;
+        this.retriever = retriever;
+        this.sender = sender;
     }
 
     @Override
     public InputStream newInputStream( char[] path )
             throws IOException
     {
-        if( remoteRetriever == null ) {
+        if( retriever == null )
+        {
             return getDelegate().newInputStream( path );
         }
-        else {
+        else
+        {
             return newInputStreamRemote( path );
         }
     }
@@ -70,40 +88,61 @@ public abstract class OverlayFileSystemIO
     public OutputStream newOutputStream( char[] path, OpenOption... options )
             throws IOException
     {
-        if( remoteSender == null ) {
+        if( sender == null )
+        {
             return getDelegate().newOutputStream( path, options );
         }
-        else {
-            try {
-                return getDelegate().newOutputStream( path, options );
-            }
-            finally {
-                remoteSender.send( path );
-            }
+        else
+        {
+            return new OverlayOutputStream( sender, pathSynchronizer, path, getDelegate().newOutputStream( path, options ) );
         }
     }
 
     protected final InputStream newInputStreamRemote( char[] path )
             throws IOException
     {
-        if( exists( path ) ) {
-            try {
+        if( exists( path ) )
+        {
+            try
+            {
                 return getDelegate().newInputStream( path );
-            }
-            catch( FileNotFoundException ex ) {
+            } catch( FileNotFoundException ex )
+            {
             }
         }
 
-        if( pathSynchronizer == null ) {
-            remoteRetriever.retrieve( path );
+        if( pathSynchronizer == null )
+        {
+            retriever.retrieve( path );
         }
-        else {
-            pathSynchronizer.execute( path, () -> {
-                                  remoteRetriever.retrieve( path );
-                                  return null;
+        else
+        {
+            pathSynchronizer.execute( path, ()
+                                      -> 
+                                      {
+                                          retriever.retrieve( path );
+                                          return null;
                               } );
         }
 
         return getDelegate().newInputStream( path );
     }
+
+    @Override
+    public void close()
+            throws IOException
+    {
+        try
+        {
+            if( pathSynchronizer != null )
+            {
+                pathSynchronizer.close();
+            }
+        }
+        finally
+        {
+            super.close();
+        }
+    }
+
 }

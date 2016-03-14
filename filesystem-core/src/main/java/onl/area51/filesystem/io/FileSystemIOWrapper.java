@@ -30,7 +30,8 @@ import java.nio.file.attribute.FileAttribute;
 import java.util.Set;
 
 /**
- * A wrapper that delegates to another {@link FileSystemIO} instance with a hook implemented for retrieving a path from another location if it does not exist.
+ * A wrapper that delegates to another {@link FileSystemIO} instance with a hook implemented for retrieving a path from another
+ * location if it does not exist.
  *
  * @author peter
  */
@@ -167,4 +168,12 @@ public abstract class FileSystemIOWrapper
     {
         delegate.expire();
     }
+
+    @Override
+    public long size( char[] path )
+            throws IOException
+    {
+        return delegate.size( path );
+    }
+
 }

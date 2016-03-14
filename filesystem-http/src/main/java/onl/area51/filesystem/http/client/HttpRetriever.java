@@ -27,11 +27,11 @@ import java.util.logging.Logger;
 import onl.area51.filesystem.FileSystemUtils;
 import onl.area51.filesystem.io.FileSystemIO;
 import onl.area51.filesystem.io.overlay.OverlayFileSystemIO;
-import onl.area51.filesystem.io.overlay.RemoteRetriever;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import onl.area51.filesystem.io.overlay.OverlayRetriever;
 
 /**
  * {@link OverlayFileSystemIO} implementation to retrieve content from a remote HTTP/HTTPS server
@@ -39,7 +39,7 @@ import org.apache.http.impl.client.HttpClients;
  * @author peter
  */
 public class HttpRetriever
-        implements RemoteRetriever
+        implements OverlayRetriever
 {
 
     private static final Logger LOG = Logger.getLogger( "HTTP" );

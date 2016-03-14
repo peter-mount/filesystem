@@ -21,9 +21,17 @@ import java.io.IOException;
  *
  * @author peter
  */
-public interface RemoteRetriever
+public interface OverlaySender
 {
 
-    void retrieve( char[] path )
+    /**
+     * Submit a path to the sender. this should then send at some future time.
+     *
+     * @param path
+     *
+     * @throws IOException
+     */
+    void send( char[] path )
             throws IOException;
+    
 }

@@ -24,10 +24,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -51,6 +49,14 @@ import onl.area51.filesystem.io.FileSystemIO;
  */
 public class FileSystemUtils
 {
+    /**
+     * System property holding the cache base directory
+     */
+    public static final String CACHEBASE_PROPERTY = "area51.cacheBase";
+    /**
+     * Environment variable holding the cache base directory
+     */
+    public static final String CACHEBASE_ENV = "FILESYSTEM_BASE";
 
     public static final String UTF8 = StandardCharsets.UTF_8.name();
 
@@ -66,9 +72,9 @@ public class FileSystemUtils
     public static synchronized String getCacheBase()
     {
         if( CACHE_BASE == null ) {
-            CACHE_BASE = System.getenv( "FILESYSTEM_BASE" );
+            CACHE_BASE = System.getenv(CACHEBASE_ENV);
             if( CACHE_BASE == null || CACHE_BASE.trim().isEmpty() ) {
-                CACHE_BASE = System.getProperty( "area51.cacheBase" );
+                CACHE_BASE = System.getProperty(CACHEBASE_PROPERTY);
             }
             if( CACHE_BASE == null || CACHE_BASE.trim().isEmpty() ) {
                 CACHE_BASE = System.getProperty( "user.home" ) + "/.area51/";

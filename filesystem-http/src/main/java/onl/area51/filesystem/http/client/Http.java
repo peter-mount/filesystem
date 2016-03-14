@@ -31,10 +31,10 @@ public class Http
         extends OverlayFileSystemIO
 {
 
-    public Http( FileSystemIO delegate, Map<String, ?> env )
+    public Http( FileSystemIO delegate, Map<String, Object> env )
     {
         super( delegate,
-               new PathSynchronizer(),
+               PathSynchronizer.create( env ),
                new HttpRetriever( delegate, env )
         );
     }

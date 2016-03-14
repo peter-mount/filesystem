@@ -22,19 +22,18 @@ import onl.area51.filesystem.io.overlay.PathSynchronizer;
 import org.kohsuke.MetaInfServices;
 
 /**
- * A FileSystem overlay that will read from an S3 bucket if the cache does not have an entry.
  *
  * @author peter
  */
 @MetaInfServices( OverlayFileSystemIO.class )
-public class S3Read
+public class S3Write
         extends OverlayFileSystemIO
 {
 
-    public S3Read( FileSystemIO delegate, Map<String, Object> env )
+    public S3Write( FileSystemIO delegate, Map<String, Object> env )
     {
         super( delegate,
                PathSynchronizer.create( env ),
-               new S3Retriever( delegate, env ) );
+               new S3Sender( delegate, env ) );
     }
 }

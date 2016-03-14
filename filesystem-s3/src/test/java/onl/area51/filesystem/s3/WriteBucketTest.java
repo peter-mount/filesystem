@@ -15,8 +15,11 @@
  */
 package onl.area51.filesystem.s3;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.URI;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -25,26 +28,28 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import onl.area51.filesystem.FileSystemUtils;
+import org.junit.Assert;
+import static org.junit.Assert.assertFalse;
 import org.junit.Ignore;
 import org.junit.Test;
 
 /**
- * Tests reading from a bucket.
+ * Tests reading and writing to a bucket.
  *
  * Note this test is disabled as it requires access to S3. To run it yourself you must ensure that your credentials are
  * configured and BUCKET is set to your bucket name.
  *
  * If you don't do this you will find the test will fail as you wont have the correct permissions.
  *
- * Also you must ensure that a file with the name in TEST_FILE exists in the bucket so the read test will have something to
- * retrieve.
- *
  * @author peter
  */
-public class ReadBucketTest
+public class WriteBucketTest
         extends CommonTestUtils
 {
 
@@ -52,21 +57,16 @@ public class ReadBucketTest
      * Set this to your bucket name
      */
     private static final String BUCKET = "test.area51.onl";
-    /**
-     * Test file that must exist in the bucket. Ensure that any file is uploaded to the bucket using the S3 console with this
-     * name.
-     */
-    private static final String TEST_FILE = "/18_Close-16.png";
 
     private static final Logger LOG = Logger.getGlobal();
 
-    private static final String PREFIX = "cache://s3read.test";
+    private static final String PREFIX = "cache://s3write.test";
 
     private static Map<String, Object> createMap()
     {
         Map<String, Object> map = new HashMap<>();
         map.put( "fileSystemType", "flat" );
-        map.put( "fileSystemWrapper", "s3read" );
+        map.put( "fileSystemWrapper", "s3read,s3write" );
         map.put( "bucket", BUCKET );
         map.put( "maxAge", "60000" );
         map.put( "clearOnStartup", "true" );
@@ -75,26 +75,64 @@ public class ReadBucketTest
 
     @Test
     @Ignore
-    public void readObject()
+    public void rwObject()
             throws IOException
     {
         System.setProperty( FileSystemUtils.CACHEBASE_PROPERTY, BASE_FILE.toString() );
         FileSystems.newFileSystem( URI.create( PREFIX ), createMap() );
 
-        Path path = Paths.get( URI.create( PREFIX + TEST_FILE ) );
+        String value = UUID.randomUUID().toString();
 
-        LOG.log( Level.INFO, () -> "Retrieving " + path );
+        Path path = Paths.get( URI.create( PREFIX + "/" + TEST_FILE ) );
+
+        LOG.log( Level.INFO, "Write to cache" );
+        testWrite( path, value );
+
+        LOG.log( Level.INFO, "Read should then be from cache" );
+        testRead( path, value );
+
+        LOG.log( Level.INFO, "Delete from cache as should now be in S3" );
+        Files.deleteIfExists( path );
+
+        assertFalse( TEST_FILE + " still exists", new File( BASE_FILE, TEST_FILE ).exists() );
+
+        LOG.log( Level.INFO, "Read should pull clean copy from s3" );
+        testRead( path, value );
+
+        LOG.log( Level.INFO, "Read should then be from cache" );
+        testRead( path, value );
+    }
+    private static final String TEST_FILE = "test.txt";
+
+    private void testRead( Path path, String expected )
+            throws IOException
+    {
+        LOG.log( Level.INFO, () -> "Reading " + path );
+
         // Just prove we can read a file
-        try( InputStream is = Files.newInputStream( path, StandardOpenOption.READ ) )
+        try( Stream<String> s = Files.lines( path ) )
         {
-            int c = 0;
-            while( is.read() > -1 )
+            String file = s.collect( Collectors.joining( "\n" ) );
+
+            Assert.assertEquals( expected, file );
+        }
+
+        LOG.log( Level.INFO, () -> "Read " + path );
+    }
+
+    public void testWrite( Path path, String content )
+            throws IOException
+    {
+        LOG.log( Level.INFO, () -> "Writing " + path );
+
+        try( OutputStream os = Files.newOutputStream( path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING ) )
+        {
+            try( Writer w = new OutputStreamWriter( os ) )
             {
-                c++;
+                w.write( content );
             }
         }
 
-        LOG.log( Level.INFO, () -> "Retrieved " + path );
+        LOG.log( Level.INFO, () -> "Wrote " + path );
     }
-
 }

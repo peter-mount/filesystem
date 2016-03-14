@@ -67,7 +67,8 @@ public abstract class AbstractLocalFileSystemIO
         this.basePath = Objects.requireNonNull( path.toAbsolutePath(), "No basePath provided" );
 
         baseFile = this.basePath.toFile();
-        if( temporary ) {
+        if( temporary )
+        {
             baseFile.deleteOnExit();
         }
 
@@ -78,7 +79,8 @@ public abstract class AbstractLocalFileSystemIO
     public void close()
             throws IOException
     {
-        if( isTemporary() ) {
+        if( isTemporary() )
+        {
             clearFileSystem();
         }
     }
@@ -97,8 +99,10 @@ public abstract class AbstractLocalFileSystemIO
     private void deleteDir( File d )
             throws IOException
     {
-        if( d.isDirectory() ) {
-            for( File f: d.listFiles() ) {
+        if( d.isDirectory() )
+        {
+            for( File f : d.listFiles() )
+            {
                 deleteDir( f );
             }
         }
@@ -124,10 +128,18 @@ public abstract class AbstractLocalFileSystemIO
             throws IOException
     {
         File f = toPath( path ).toFile();
-        if( isTemporary() ) {
+        if( isTemporary() )
+        {
             f.deleteOnExit();
         }
         return f;
+    }
+
+    @Override
+    public long size( char[] path )
+            throws IOException
+    {
+        return toPath( path ).toFile().length();
     }
 
     @Override
@@ -148,10 +160,11 @@ public abstract class AbstractLocalFileSystemIO
     public final InputStream newInputStream( char[] path )
             throws IOException
     {
-        try {
+        try
+        {
             return new FileInputStream( toFile( path ) );
-        }
-        catch( FileNotFoundException ex ) {
+        } catch( FileNotFoundException ex )
+        {
             throw new FileNotFoundException( String.valueOf( path ) );
         }
     }
@@ -160,12 +173,13 @@ public abstract class AbstractLocalFileSystemIO
     public final OutputStream newOutputStream( char[] path, OpenOption... options )
             throws IOException
     {
-        try {
+        try
+        {
             Path p = toPath( path );
             Files.createDirectories( p.getParent() );
             return new FileOutputStream( p.toFile() );
-        }
-        catch( FileNotFoundException ex ) {
+        } catch( FileNotFoundException ex )
+        {
             throw new FileNotFoundException( String.valueOf( path ) );
         }
     }
@@ -190,15 +204,16 @@ public abstract class AbstractLocalFileSystemIO
     {
         return toFile( path ).isDirectory();
     }
-    
+
     @Override
     public final SeekableByteChannel newByteChannel( char[] path, Set<? extends OpenOption> options, FileAttribute<?>... attrs )
             throws IOException
     {
-        try {
+        try
+        {
             return Files.newByteChannel( toPath( path ), options, attrs );
-        }
-        catch( FileNotFoundException ex ) {
+        } catch( FileNotFoundException ex )
+        {
             throw new FileNotFoundException( String.valueOf( path ) );
         }
     }
@@ -207,10 +222,11 @@ public abstract class AbstractLocalFileSystemIO
     public final FileChannel newFileChannel( char[] path, Set<? extends OpenOption> options, FileAttribute<?>... attrs )
             throws IOException
     {
-        try {
+        try
+        {
             return FileChannel.open( toPath( path ), options, attrs );
-        }
-        catch( FileNotFoundException ex ) {
+        } catch( FileNotFoundException ex )
+        {
             throw new FileNotFoundException( String.valueOf( path ) );
         }
     }
@@ -219,10 +235,11 @@ public abstract class AbstractLocalFileSystemIO
     public final void copyFile( boolean b, char[] src, char[] dest, CopyOption... options )
             throws IOException
     {
-        try {
+        try
+        {
             Files.copy( toPath( src ), toPath( dest ), options );
-        }
-        catch( FileNotFoundException ex ) {
+        } catch( FileNotFoundException ex )
+        {
             throw new FileNotFoundException( String.valueOf( src ) );
         }
     }
@@ -231,17 +248,19 @@ public abstract class AbstractLocalFileSystemIO
     public BasicFileAttributes getAttributes( char[] path )
             throws IOException
     {
-        if( path.length == 0 || (path.length == 1 && path[0] == '/') ) {
+        if( path.length == 0 || (path.length == 1 && path[0] == '/') )
+        {
             return RootFileAttributes.INSTANCE;
         }
         Path p = toPath( path );
-        try {
+        try
+        {
             return p.getFileSystem().provider().readAttributes( p, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS );
-        }
-        catch( FileNotFoundException ex ) {
+        } catch( FileNotFoundException ex )
+        {
             throw new FileNotFoundException( String.valueOf( path ) );
-        }
-        catch( IOException ex ) {
+        } catch( IOException ex )
+        {
             throw new IOException( "path=\"" + String.valueOf( path ) + "\" " + p.toString(), ex );
         }
     }
@@ -249,14 +268,15 @@ public abstract class AbstractLocalFileSystemIO
     @Override
     public final BasicFileAttributeView getAttributeView( char[] path )
     {
-        try {
+        try
+        {
             Path p = toPath( path );
             return p.getFileSystem().provider().getFileAttributeView( p, BasicFileAttributeView.class, LinkOption.NOFOLLOW_LINKS );
-        }
-        catch( FileNotFoundException ex ) {
+        } catch( FileNotFoundException ex )
+        {
             throw new UncheckedIOException( new FileNotFoundException( String.valueOf( path ) ) );
-        }
-        catch( IOException ex ) {
+        } catch( IOException ex )
+        {
             throw new UncheckedIOException( ex );
         }
     }
@@ -265,14 +285,15 @@ public abstract class AbstractLocalFileSystemIO
     public DirectoryStream<Path> newDirectoryStream( char[] path, DirectoryStream.Filter<? super Path> filter )
             throws IOException
     {
-        try {
+        try
+        {
             Path p = toPath( path );
             DirectoryStream<Path> ds = p.getFileSystem().provider().newDirectoryStream( p, filter );
 
             // FIXME ensure we cannot go outside of the cache directory, i.e. root does not show ..
             return ds;
-        }
-        catch( FileNotFoundException ex ) {
+        } catch( FileNotFoundException ex )
+        {
             throw new FileNotFoundException( String.valueOf( path ) );
         }
     }

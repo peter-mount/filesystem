@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -29,6 +30,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 
 /**
  * Utility class used to ensure we handle some operation on a path one thread at a time
@@ -44,26 +46,85 @@ public class PathSynchronizer
 
     private final ExecutorService executorService;
 
+    /**
+     * Convenience method to create a single thread PathSynchronizer. This is the same as
+     * {@code create(env, ()-> new PathSynchronzier());}
+     *
+     * @param env
+     * @return
+     */
+    public static PathSynchronizer create( Map<String, Object> env )
+    {
+        return create( env, PathSynchronizer::new );
+    }
+
+    /**
+     * Create a PathSynchronizer. This will use the supplier just once, so subsequent calls on the same environment will share
+     * the same instance, so actions on the same path will be atomic, specifically writes to some remote store will block reads
+     * to the same path until that action has been completed.
+     *
+     * @param env
+     * @param s
+     * @return
+     */
+    public static PathSynchronizer create( Map<String, Object> env, Supplier<PathSynchronizer> s )
+    {
+        Objects.requireNonNull( env, "No environment" );
+        return (PathSynchronizer) env.computeIfAbsent( PathSynchronizer.class.getName(), k -> s.get() );
+    }
+
+    /**
+     * Create a single thread synchronizer.
+     *
+     * Note: You should only use this constructor when using {@link #create(java.util.Map, java.util.function.Supplier) } method
+     * otherwise you may find that reads and writes lock each other.
+     */
     public PathSynchronizer()
     {
         this( Executors.newSingleThreadExecutor() );
     }
 
+    /**
+     * Create a synchronzier that uses a work stealing thread pool.
+     *
+     * Note: You should only use this constructor when using {@link #create(java.util.Map, java.util.function.Supplier) } method
+     * otherwise you may find that reads and writes lock each other.
+     *
+     * @param parallelism 0 = number of cores of system otherwise the targeted parallelism level
+     */
     public PathSynchronizer( int parallelism )
     {
         this( parallelism == 0 ? Executors.newWorkStealingPool() : Executors.newWorkStealingPool( parallelism ) );
     }
 
+    /**
+     * Create a synchronizer using an ExecutorService
+     *
+     * Note: You should only use this constructor when using {@link #create(java.util.Map, java.util.function.Supplier) } method
+     * otherwise you may find that reads and writes lock each other.
+     *
+     * @param executor
+     */
     public PathSynchronizer( ExecutorService executor )
     {
         this.executorService = executor;
     }
 
+    /**
+     * The ExecutorService in use
+     * @return 
+     */
     public final ExecutorService getExecutorService()
     {
         return executorService;
     }
 
+    /**
+     * Execute a task with the given Path locked so that multiple tasks for the same path will run atomically
+     * @param key Path
+     * @param t Task
+     * @throws IOException 
+     */
     public final void execute( String key, Callable<Void> t )
             throws IOException
     {
@@ -101,11 +162,11 @@ public class PathSynchronizer
             if( tr instanceof UncheckedIOException )
             {
                 IOException cause = ((UncheckedIOException) tr).getCause();
-                throw new IOException(cause.getMessage(), cause);
+                throw new IOException( cause.getMessage(), cause );
             }
             else
             {
-                throw new IOException( tr.getMessage(),tr );
+                throw new IOException( tr.getMessage(), tr );
             }
         }
         finally
@@ -114,16 +175,26 @@ public class PathSynchronizer
         }
     }
 
-    public final void execute( char[] path, Callable<Void> t )
+    /**
+     * Execute a task with the given Path locked so that multiple tasks for the same path will run atomically
+     * @param key Path
+     * @param t Task
+     * @throws IOException 
+     */
+    public final void execute( char[] key, Callable<Void> t )
             throws IOException
     {
-        if( path == null || path.length == 0 )
+        if( key == null || key.length == 0 )
         {
             throw new FileNotFoundException( "/" );
         }
-        execute( String.valueOf( path ), t );
+        execute( String.valueOf( key ), t );
     }
 
+    /**
+     * Close this synchronizer
+     * @throws IOException 
+     */
     @Override
     public void close()
             throws IOException

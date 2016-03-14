@@ -16,6 +16,7 @@
 package onl.area51.filesystem.io;
 
 import java.io.Closeable;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -40,48 +41,158 @@ public interface FileSystemIO
         extends Closeable
 {
 
+    /**
+     * The local base directory of the filesystem. For non-local filesystems, i.e. those who have no local storage this may be
+     * null.
+     *
+     * @return
+     */
     Path getBaseDirectory();
 
+    /**
+     * Is the filesystem temporary
+     *
+     * @return
+     */
     default boolean isTemporary()
     {
         return false;
     }
 
+    /**
+     * Does the path exist in the filesystem
+     *
+     * @param path
+     * @return
+     * @throws IOException
+     */
     boolean exists( char path[] )
             throws IOException;
 
+    /**
+     * Create a directory
+     *
+     * @param path
+     * @param attrs
+     * @throws IOException
+     */
     void createDirectory( char path[], FileAttribute<?> attrs[] )
             throws IOException;
 
+    /**
+     * Create an InputStream for a path
+     *
+     * @param path
+     * @return
+     * @throws IOException           on error
+     * @throws FileNotFoundException if the path does not exist
+     */
     InputStream newInputStream( char path[] )
             throws IOException;
 
+    /**
+     * Create an output stream for a path
+     *
+     * @param path
+     * @param options
+     * @return
+     * @throws IOException
+     */
     OutputStream newOutputStream( char path[], OpenOption... options )
             throws IOException;
 
+    /**
+     * Delete a path
+     *
+     * @param path
+     * @param exists
+     * @throws IOException
+     */
     void deleteFile( char path[], boolean exists )
             throws IOException;
 
+    /**
+     * Is the Path a file
+     *
+     * @param path
+     * @return
+     * @throws IOException
+     */
     boolean isFile( char path[] )
             throws IOException;
 
+    /**
+     * Is the path a directory
+     *
+     * @param path
+     * @return
+     * @throws IOException
+     */
     boolean isDirectory( char path[] )
             throws IOException;
 
+    /**
+     * Create a ByteChannel
+     *
+     * @param path
+     * @param options
+     * @param attrs
+     * @return
+     * @throws IOException
+     */
     SeekableByteChannel newByteChannel( char path[], Set<? extends OpenOption> options, FileAttribute<?>... attrs )
             throws IOException;
 
+    /**
+     * Create a FileChannel
+     *
+     * @param path
+     * @param options
+     * @param attrs
+     * @return
+     * @throws IOException
+     */
     FileChannel newFileChannel( char path[], Set<? extends OpenOption> options, FileAttribute<?>... attrs )
             throws IOException;
 
+    /**
+     * Copy a file. Both src and dest must be paths within this filesystem
+     *
+     * @param b
+     * @param src
+     * @param dest
+     * @param options
+     * @throws IOException
+     */
     void copyFile( boolean b, char src[], char dest[], CopyOption... options )
             throws IOException;
 
+    /**
+     * Get the attributes for a path
+     *
+     * @param path
+     * @return
+     * @throws IOException
+     */
     BasicFileAttributes getAttributes( char path[] )
             throws IOException;
 
+    /**
+     * Get an attribute view of a path
+     *
+     * @param path
+     * @return
+     */
     BasicFileAttributeView getAttributeView( char path[] );
 
+    /**
+     * Get a directory stream for a path
+     *
+     * @param path
+     * @param filter
+     * @return
+     * @throws IOException
+     */
     DirectoryStream<Path> newDirectoryStream( char path[], Filter<? super Path> filter )
             throws IOException;
 
@@ -91,11 +202,25 @@ public interface FileSystemIO
     public static final String BASE_DIRECTORY = "baseDirectory";
 
     /**
-     * Flag that if present on a file system's environment then the file system is temporary and will be destroyed when the vm exists or is closed
+     * Flag that if present on a file system's environment then the file system is temporary and will be destroyed when the vm
+     * exists or is closed
      */
     public static final String DELETE_ON_EXIT = "deleteOnExit";
 
+    /**
+     * For caches, trigger an expire run
+     */
     default void expire()
     {
     }
+
+    /**
+     * The length of the file at a path
+     *
+     * @param path
+     * @return
+     * @throws IOException if the path does not exist or is a directory
+     */
+    long size( char[] path )
+            throws IOException;
 }

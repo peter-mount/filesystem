@@ -21,9 +21,11 @@ import com.amazonaws.services.s3.model.S3Object;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import onl.area51.filesystem.FileSystemUtils;
 import onl.area51.filesystem.io.FileSystemIO;
-import onl.area51.filesystem.io.overlay.RemoteRetriever;
+import onl.area51.filesystem.io.overlay.OverlayRetriever;
 
 /**
  *
@@ -31,8 +33,10 @@ import onl.area51.filesystem.io.overlay.RemoteRetriever;
  */
 public class S3Retriever
         extends AbstractS3Action
-        implements RemoteRetriever
+        implements OverlayRetriever
 {
+
+    private static final Logger LOG = Logger.getLogger( "S3" );
 
     public S3Retriever( FileSystemIO delegate, Map<String, ?> env )
     {
@@ -44,16 +48,20 @@ public class S3Retriever
             throws IOException
     {
         String pathValue = String.valueOf( path );
-        try {
+        try
+        {
+            LOG.log( Level.INFO, () -> "Retrieving " + getBucketName() + ":" + pathValue );
             S3Object obj = getS3().getObject( new GetObjectRequest( getBucketName(), pathValue ) );
             FileSystemUtils.copyFromRemote( () -> obj.getObjectContent(), getDelegate(), path );
-        }
-        catch( AmazonS3Exception ex ) {
-            String s = ex.getMessage();
-            if( s != null && s.contains( "key does not exist" ) ) {
+            LOG.log( Level.INFO, () -> "Retrieved " + getBucketName() + ":" + pathValue );
+        } catch( AmazonS3Exception ex )
+        {
+            LOG.log( Level.INFO, () -> "Error " + ex.getStatusCode() + " " + getBucketName() + ":" + pathValue );
+            if( ex.getStatusCode() == 404 )
+            {
                 throw new FileNotFoundException( pathValue );
             }
-            throw new IOException( s, ex );
+            throw new IOException( "Cannot access " + pathValue, ex );
         }
     }
 }

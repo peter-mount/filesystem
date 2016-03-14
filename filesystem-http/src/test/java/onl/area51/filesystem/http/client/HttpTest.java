@@ -25,6 +25,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
+import onl.area51.filesystem.FileSystemUtils;
 import onl.area51.filesystem.cache.CacheFileSystemProvider;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -55,7 +56,7 @@ public class HttpTest
     public static void setUpClass()
             throws IOException
     {
-        System.setProperty( CacheFileSystemProvider.class.getName(), BASE_FILE.toString() );
+        System.setProperty( FileSystemUtils.CACHEBASE_PROPERTY, BASE_FILE.toString() );
 
         FileSystems.newFileSystem( URI.create( HTTP_PREFIX ), createMap( "http://uktra.in/" ) );
 

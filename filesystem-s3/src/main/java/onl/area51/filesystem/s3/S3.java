@@ -22,16 +22,23 @@ import onl.area51.filesystem.io.overlay.PathSynchronizer;
 import org.kohsuke.MetaInfServices;
 
 /**
+ * A FileSystem overlay which will proxy an S3 bucket.
+ *
+ * Unlike S3read or S3write this will both retrieve objects from the bucket when not locally stored but also write to the bucket
+ * when an entry has been created locally.
  *
  * @author peter
  */
-@MetaInfServices(OverlayFileSystemIO.class)
+@MetaInfServices( OverlayFileSystemIO.class )
 public class S3
         extends OverlayFileSystemIO
 {
 
-    public S3( FileSystemIO delegate, Map<String, ?> env )
+    public S3( FileSystemIO delegate, Map<String, Object> env )
     {
-        super( delegate, new PathSynchronizer(), new S3Retriever( delegate, env ) );
+        super( delegate,
+               PathSynchronizer.create( env ),
+               new S3Retriever( delegate, env ),
+               new S3Sender( delegate, env ) );
     }
 }
