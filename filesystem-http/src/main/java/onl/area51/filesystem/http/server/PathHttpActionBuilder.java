@@ -18,14 +18,19 @@ package onl.area51.filesystem.http.server;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 import onl.area51.filesystem.http.PathEntity;
 import onl.area51.httpd.HttpAction;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpStatus;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 
 /**
- * Builds a map of file systems with a specified path prefix. This map can then be used via an HttpAction chain to resolve a path the an nio Path
- * and an appropriate action.
+ * Builds a map of file systems with a specified path prefix. This map can then be used via an HttpAction chain to resolve a
+ * path the an nio Path and an appropriate action.
  *
  * @author peter
  */
@@ -43,6 +48,11 @@ public interface PathHttpActionBuilder
         } );
     }
 
+    /**
+     * Return the content of a path to the client - specifically a GET request.
+     *
+     * @return
+     */
     default PathHttpActionBuilder returnPathContent()
     {
         return add( ( req, resp, ctx, path ) -> {
@@ -52,11 +62,38 @@ public interface PathHttpActionBuilder
         } );
     }
 
+    /**
+     * Returns just the head (i.e. no actual content) to the client - specifically a HEAD request.
+     *
+     * @return
+     */
     default PathHttpActionBuilder returnPathSizeOnly()
     {
         return add( ( req, resp, ctx, path ) -> {
             resp.setStatusCode( HttpStatus.SC_OK );
             resp.setEntity( new PathEntity.SizeOnly( path ) );
+        } );
+    }
+
+    /**
+     * Post the request content to a cache
+     *
+     * @return
+     */
+    default PathHttpActionBuilder saveContent()
+    {
+        return add( ( req, resp, ctx, path ) -> {
+            if( req instanceof HttpEntityEnclosingRequest ) {
+                HttpEntityEnclosingRequest request = (HttpEntityEnclosingRequest) req;
+                HttpEntity entity = request.getEntity();
+                Files.copy( entity.getContent(), path, StandardCopyOption.REPLACE_EXISTING );
+                resp.setStatusCode( HttpStatus.SC_OK );
+                resp.setEntity( new StringEntity( "OK" ) );
+            }
+            else {
+                resp.setStatusCode( HttpStatus.SC_BAD_REQUEST );
+                resp.setEntity( new StringEntity( "BAD REQUEST" ) );
+            }
         } );
     }
 
