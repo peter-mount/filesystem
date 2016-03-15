@@ -21,9 +21,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 import onl.area51.filesystem.http.PathEntity;
 import onl.area51.httpd.HttpAction;
-import org.apache.http.HttpConnection;
 import org.apache.http.HttpStatus;
-import org.apache.http.protocol.HttpCoreContext;
 
 /**
  * Builds a map of file systems with a specified path prefix. This map can then be used via an HttpAction chain to resolve a path the an nio Path

@@ -7,7 +7,7 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
     
-    <groupId>uk.trainwatch.filesystem</groupId>
+    <groupId>onl.area51.filesystem</groupId>
     <artifactId>filesystem-s3</artifactId>
     <packaging>jar</packaging>
     

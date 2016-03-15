@@ -58,7 +58,8 @@ public class FileSystemIORepository
     private static void forEach( Class clazz, Consumer<String> action )
     {
         try {
-            Enumeration<URL> en = FileSystemIORepository.class.getClassLoader().getResources( "META-INF/services/" + clazz.getName() );
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            Enumeration<URL> en = classLoader.getResources( "META-INF/services/" + clazz.getName() );
             while( en.hasMoreElements() ) {
                 try( BufferedReader r = new BufferedReader( new InputStreamReader( en.nextElement().openStream() ) ) ) {
                     r.lines()

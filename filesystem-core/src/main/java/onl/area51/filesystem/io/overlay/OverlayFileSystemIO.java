@@ -20,8 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.OpenOption;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import onl.area51.filesystem.io.FileSystemIO;
 import onl.area51.filesystem.io.FileSystemIOWrapper;
 
@@ -34,8 +32,6 @@ import onl.area51.filesystem.io.FileSystemIOWrapper;
 public abstract class OverlayFileSystemIO
         extends FileSystemIOWrapper
 {
-
-    private static final Logger LOG = Logger.getLogger( "filesystem" );
 
     private final PathSynchronizer pathSynchronizer;
     private final OverlayRetriever retriever;
@@ -68,6 +64,18 @@ public abstract class OverlayFileSystemIO
         this.pathSynchronizer = pathSynchronizer;
         this.retriever = retriever;
         this.sender = sender;
+    }
+
+    @Override
+    public boolean exists( char[] path )
+            throws IOException
+    {
+        if( super.exists( path ) )
+        {
+            return true;
+        }
+        retrieve( path );
+        return super.exists( path );
     }
 
     @Override
@@ -111,6 +119,13 @@ public abstract class OverlayFileSystemIO
             }
         }
 
+        retrieve( path );
+        return getDelegate().newInputStream( path );
+    }
+
+    private void retrieve( char[] path )
+            throws IOException
+    {
         if( pathSynchronizer == null )
         {
             retriever.retrieve( path );
@@ -124,8 +139,6 @@ public abstract class OverlayFileSystemIO
                                           return null;
                               } );
         }
-
-        return getDelegate().newInputStream( path );
     }
 
     @Override
