@@ -19,9 +19,15 @@
         
         <dependency>
             <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk</artifactId>
+            <artifactId>aws-java-sdk-s3</artifactId>
             <version>1.10.60</version>
         </dependency>
+
+        <!--dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk</artifactId>
+            <version>1.10.60</version>
+        </dependency-->
 
         <dependency>
             <groupId>onl.area51.filesystem</groupId>
@@ -33,13 +39,6 @@
             <groupId>org.kohsuke.metainf-services</groupId>
             <artifactId>metainf-services</artifactId>
             <version>1.5</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>javax.enterprise</groupId>
-            <artifactId>cdi-api</artifactId>
-            <version>2.0-EDR1</version>
-            <scope>provided</scope>
         </dependency>
         
         <dependency>
