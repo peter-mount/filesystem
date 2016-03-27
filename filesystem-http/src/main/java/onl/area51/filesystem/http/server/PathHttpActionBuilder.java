@@ -20,13 +20,12 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
-import onl.area51.filesystem.http.PathEntity;
 import onl.area51.httpd.HttpAction;
+import onl.area51.httpd.util.PathEntity;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpStatus;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.util.EntityUtils;
 
 /**
  * Builds a map of file systems with a specified path prefix. This map can then be used via an HttpAction chain to resolve a
