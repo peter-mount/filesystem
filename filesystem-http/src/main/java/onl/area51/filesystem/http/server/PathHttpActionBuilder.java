@@ -20,7 +20,8 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
-import onl.area51.httpd.HttpAction;
+import onl.area51.httpd.action.Action;
+import onl.area51.httpd.action.Actions;
 import onl.area51.httpd.util.PathEntity;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
@@ -40,9 +41,9 @@ public interface PathHttpActionBuilder
 
     default PathHttpActionBuilder assertPathExists()
     {
-        return add( ( req, resp, context, path ) -> {
+        return add( ( req, path ) -> {
             if( path == null || !Files.exists( path, LinkOption.NOFOLLOW_LINKS ) ) {
-                HttpAction.sendError( resp, HttpStatus.SC_NOT_FOUND, req.getRequestLine().getUri() );
+                Actions.sendError( req, HttpStatus.SC_NOT_FOUND, req.getHttpRequest().getRequestLine().getUri() );
             }
         } );
     }
@@ -54,10 +55,10 @@ public interface PathHttpActionBuilder
      */
     default PathHttpActionBuilder returnPathContent()
     {
-        return add( ( req, resp, ctx, path ) -> {
-            resp.setStatusCode( HttpStatus.SC_OK );
+        return add( ( req, path ) -> {
+            req.getHttpResponse().setStatusCode( HttpStatus.SC_OK );
             PathEntity body = new PathEntity( path );
-            resp.setEntity( body );
+            req.getHttpResponse().setEntity( body );
         } );
     }
 
@@ -68,9 +69,9 @@ public interface PathHttpActionBuilder
      */
     default PathHttpActionBuilder returnPathSizeOnly()
     {
-        return add( ( req, resp, ctx, path ) -> {
-            resp.setStatusCode( HttpStatus.SC_OK );
-            resp.setEntity( new PathEntity.SizeOnly( path ) );
+        return add( ( req, path ) -> {
+            req.getHttpResponse().setStatusCode( HttpStatus.SC_OK );
+            req.getHttpResponse().setEntity( new PathEntity.SizeOnly( path ) );
         } );
     }
 
@@ -81,34 +82,34 @@ public interface PathHttpActionBuilder
      */
     default PathHttpActionBuilder saveContent()
     {
-        return add( ( req, resp, ctx, path ) -> {
+        return add( ( req, path ) -> {
             if( req instanceof HttpEntityEnclosingRequest ) {
                 HttpEntityEnclosingRequest request = (HttpEntityEnclosingRequest) req;
                 HttpEntity entity = request.getEntity();
                 Files.copy( entity.getContent(), path, StandardCopyOption.REPLACE_EXISTING );
-                resp.setStatusCode( HttpStatus.SC_OK );
-                resp.setEntity( new StringEntity( "OK" ) );
+                req.getHttpResponse().setStatusCode( HttpStatus.SC_OK );
+                req.getHttpResponse().setEntity( new StringEntity( "OK" ) );
             }
             else {
-                resp.setStatusCode( HttpStatus.SC_BAD_REQUEST );
-                resp.setEntity( new StringEntity( "BAD REQUEST" ) );
+                req.getHttpResponse().setStatusCode( HttpStatus.SC_BAD_REQUEST );
+                req.getHttpResponse().setEntity( new StringEntity( "BAD REQUEST" ) );
             }
         } );
     }
 
     PathHttpAction build();
 
-    default HttpAction build( FileSystemMap map )
+    default Action build( FileSystemMap map )
     {
         PathHttpAction action = build();
-        return ( req, resp, ctx ) -> {
-            String uri = req.getRequestLine().getUri();
+        return ( req ) -> {
+            String uri = req.getHttpRequest().getRequestLine().getUri();
             Path path = map.getPath( uri );
             if( path == null ) {
-                HttpAction.sendError( resp, HttpStatus.SC_NOT_FOUND, uri );
+                Actions.sendError( req, HttpStatus.SC_NOT_FOUND, uri );
             }
             else {
-                action.apply( req, resp, ctx, path );
+                action.apply( req, path );
             }
         };
     }

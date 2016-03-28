@@ -19,11 +19,9 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Objects;
-import onl.area51.httpd.HttpAction;
+import onl.area51.httpd.action.Action;
+import onl.area51.httpd.action.Request;
 import org.apache.http.HttpException;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestHandler;
 
 /**
@@ -34,17 +32,17 @@ import org.apache.http.protocol.HttpRequestHandler;
 public interface PathHttpAction
 {
 
-    void apply( HttpRequest request, HttpResponse response, HttpContext context, Path path )
+    void apply( Request request, Path path )
             throws HttpException,
                    IOException;
 
     default PathHttpAction andThen( PathHttpAction after )
     {
         Objects.requireNonNull( after );
-        return ( req, resp, ctx, path ) -> {
-            apply( req, resp, ctx, path );
-            if( HttpAction.isOk( resp ) ) {
-                after.apply( req, resp, ctx, path );
+        return ( req, path ) -> {
+            apply( req, path );
+            if( Action.isOk( req )) {
+                after.apply( req, path );
             }
         };
     }
