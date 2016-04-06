@@ -28,8 +28,6 @@ import java.util.Map;
 import java.util.Objects;
 import onl.area51.filesystem.FileSystemUtils;
 import onl.area51.httpd.action.Action;
-import onl.area51.httpd.action.Actions;
-import org.apache.http.HttpStatus;
 
 /**
  *
@@ -48,20 +46,6 @@ public class FileSystemFactory
             return fs.getPath( "/" );
         }
         return null;
-    }
-
-    public static Action getPathAction( FileSystem fs, PathHttpAction action )
-    {
-        return req -> {
-            String uri = req.getHttpRequest().getRequestLine().getUri();
-            Path path = getPath( uri, fs );
-            if( path == null || !Files.exists( path, LinkOption.NOFOLLOW_LINKS ) ) {
-                Actions.sendError( req, HttpStatus.SC_NOT_FOUND, uri );
-            }
-            else {
-                action.apply( req, path );
-            }
-        };
     }
 
     public static String getPrefix( Map<String, Object> cfg )
@@ -94,4 +78,26 @@ public class FileSystemFactory
         Map<String, Object> env = (Map<String, Object>) cfg.get( "environment" );
         return FileSystems.newFileSystem( uri, env == null ? new HashMap<>() : env );
     }
+
+    public static Action extractPath()
+    {
+        return r -> {
+            Path path = r.getAttribute( "path", () -> r.<FileSystemMap>getAttribute( "fileSystemMap" )
+                                        .getPath( r.getHttpRequest().getRequestLine().getUri() ) );
+            if( path == null || !Files.exists( path, LinkOption.NOFOLLOW_LINKS ) ) {
+                r.removeAttribute( "path" );
+            }
+        };
+    }
+
+    public static Action extractPath( FileSystem fs )
+    {
+        return r -> {
+            Path path = r.getAttribute( "path", () -> getPath( r.getHttpRequest().getRequestLine().getUri(), fs ) );
+            if( path == null || !Files.exists( path, LinkOption.NOFOLLOW_LINKS ) ) {
+                r.removeAttribute( "path" );
+            }
+        };
+    }
+
 }
