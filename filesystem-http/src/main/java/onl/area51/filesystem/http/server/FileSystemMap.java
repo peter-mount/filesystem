@@ -17,22 +17,17 @@ package onl.area51.filesystem.http.server;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
-import onl.area51.filesystem.FileSystemUtils;
 
 /**
- * Builds a map of file systems with a specified path prefix. This map can then be used via an HttpAction chain to resolve a path the an nio Path
- * and an appropriate action.
+ * Builds a map of file systems with a specified path prefix. This map can then be used via an HttpAction chain to resolve a
+ * path the an nio Path and an appropriate action.
  *
  * @author peter
  */
@@ -80,36 +75,20 @@ public interface FileSystemMap
             public Builder addFileSystem( Map<String, Object> cfg )
             {
                 try {
-                    Objects.requireNonNull( cfg );
-
-                    String name = FileSystemUtils.getString( cfg, "name" );
-                    String prefix = "/" + FileSystemUtils.getString( cfg, "prefix", name ) + "/";
-
-                    // Ensure prefix starts with / at least 2 chars long and not "//"
-                    if( !prefix.startsWith( "/" ) || prefix.length() < 2 || prefix.equals( "//" ) ) {
-                        throw new IllegalArgumentException( prefix );
-                    }
-
-                    // ensure prefix ends with /
-                    prefix = prefix.endsWith( "/" ) ? prefix : (prefix + "/");
+                    String prefix = FileSystemFactory.getPrefix( cfg );
 
                     if( prefixes.containsKey( prefix ) ) {
                         throw new IllegalArgumentException( "Path " + prefix + " already exists" );
                     }
 
-                    URI uri = new URI( FileSystemUtils.getString( cfg, "uri", "local://" + name ) );
-
-                    Map<String, Object> env = (Map<String, Object>) cfg.get( "environment" );
-                    FileSystem fileSystem = FileSystems.newFileSystem( uri, env == null ? new HashMap<>() : env );
+                    FileSystem fileSystem = FileSystemFactory.getFileSystem( cfg );
 
                     config.put( prefix, cfg );
                     prefixes.put( prefix, fileSystem );
                     return this;
-                }
-                catch( IOException ex ) {
+                } catch( IOException ex ) {
                     throw new UncheckedIOException( ex );
-                }
-                catch( URISyntaxException ex ) {
+                } catch( URISyntaxException ex ) {
                     throw new IllegalArgumentException( ex );
                 }
             }
