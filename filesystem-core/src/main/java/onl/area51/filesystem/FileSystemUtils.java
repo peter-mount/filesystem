@@ -49,6 +49,7 @@ import onl.area51.filesystem.io.FileSystemIO;
  */
 public class FileSystemUtils
 {
+
     /**
      * System property holding the cache base directory
      */
@@ -72,9 +73,9 @@ public class FileSystemUtils
     public static synchronized String getCacheBase()
     {
         if( CACHE_BASE == null ) {
-            CACHE_BASE = System.getenv(CACHEBASE_ENV);
+            CACHE_BASE = System.getenv( CACHEBASE_ENV );
             if( CACHE_BASE == null || CACHE_BASE.trim().isEmpty() ) {
-                CACHE_BASE = System.getProperty(CACHEBASE_PROPERTY);
+                CACHE_BASE = System.getProperty( CACHEBASE_PROPERTY );
             }
             if( CACHE_BASE == null || CACHE_BASE.trim().isEmpty() ) {
                 CACHE_BASE = System.getProperty( "user.home" ) + "/.area51/";
@@ -401,7 +402,9 @@ public class FileSystemUtils
     private static void mergeEnv( Map<String, Object> newEnv, Map<String, ?> env )
     {
         if( env != null ) {
-            newEnv.putAll( env );
+            // Some maps are not equal, so we can't use putAll
+            env.forEach( ( k, v ) -> newEnv.put( k, v ) );
+            //newEnv.putAll( env );
         }
     }
 
