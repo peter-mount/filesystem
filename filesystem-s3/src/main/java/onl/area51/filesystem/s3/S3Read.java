@@ -26,15 +26,13 @@ import org.kohsuke.MetaInfServices;
  *
  * @author peter
  */
-@MetaInfServices( OverlayFileSystemIO.class )
+@MetaInfServices(OverlayFileSystemIO.class)
 public class S3Read
         extends OverlayFileSystemIO
 {
 
     public S3Read( FileSystemIO delegate, Map<String, Object> env )
     {
-        super( delegate,
-               PathSynchronizer.create( env ),
-               new S3Retriever( delegate, env ) );
+        super( delegate, new PathSynchronizer(), new S3Retriever( delegate, env ) );
     }
 }

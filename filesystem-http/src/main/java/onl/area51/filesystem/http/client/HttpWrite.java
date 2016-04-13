@@ -18,7 +18,6 @@ package onl.area51.filesystem.http.client;
 import java.util.Map;
 import onl.area51.filesystem.io.FileSystemIO;
 import onl.area51.filesystem.io.overlay.OverlayFileSystemIO;
-import onl.area51.filesystem.io.overlay.PathSynchronizer;
 import org.kohsuke.MetaInfServices;
 
 /**
@@ -33,10 +32,7 @@ public class HttpWrite
 
     public HttpWrite( FileSystemIO delegate, Map<String, Object> env )
     {
-        super( delegate,
-               PathSynchronizer.create( env ),
-               new HttpSender( delegate, env )
-        );
+        super( delegate, new HttpSender( delegate, env ) );
     }
 
 }

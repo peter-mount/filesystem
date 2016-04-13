@@ -28,6 +28,8 @@ import onl.area51.filesystem.io.overlay.OverlayFileSystemIO;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import onl.area51.filesystem.io.overlay.OverlayRetriever;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
 /**
  * {@link OverlayFileSystemIO} implementation to retrieve content from a remote HTTP/HTTPS server
@@ -56,27 +58,29 @@ public class HttpRetriever
             }
 
             URI uri = getRemoteURI( path );
-            
+
             LOG.log( Level.INFO, () -> "Retrieving " + uri );
 
             HttpGet get = new HttpGet( uri );
             get.setHeader( USER_AGENT, getUserAgent() );
 
-            HttpResponse response = getClient().execute( get );
+            try( CloseableHttpClient client = HttpClients.createDefault() ) {
+                HttpResponse response = client.execute( get );
 
-            int returnCode = response.getStatusLine().getStatusCode();
-            LOG.log( Level.INFO, () -> "ReturnCode " + returnCode + ": " + response.getStatusLine().getReasonPhrase() );
+                int returnCode = response.getStatusLine().getStatusCode();
+                LOG.log( Level.INFO, () -> "ReturnCode " + returnCode + ": " + response.getStatusLine().getReasonPhrase() );
 
-            switch( returnCode ) {
-                case 200:
-                case 304:
-                    FileSystemUtils.copyFromRemote( () -> response.getEntity().getContent(), getDelegate(), path );
-                    break;
+                switch( returnCode ) {
+                    case 200:
+                    case 304:
+                        FileSystemUtils.copyFromRemote( () -> response.getEntity().getContent(), getDelegate(), path );
+                        break;
 
-                case 404:
-                case 500:
-                default:
-                    throw new FileNotFoundException( String.valueOf( path ) );
+                    case 404:
+                    case 500:
+                    default:
+                        throw new FileNotFoundException( String.valueOf( path ) );
+                }
             }
         }
         catch( URISyntaxException ex ) {

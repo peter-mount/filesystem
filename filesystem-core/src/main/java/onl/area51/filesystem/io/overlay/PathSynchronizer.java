@@ -21,11 +21,9 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Supplier;
 
 /**
  * Utility class used to ensure we handle some operation on a path one thread at a time
@@ -40,35 +38,6 @@ public class PathSynchronizer
     private final Map<String, Condition> conditions = new HashMap<>();
 
     /**
-     * Convenience method to create a single thread PathSynchronizer. This is the same as
-     * {@code create(env, ()-> new PathSynchronzier());}
-     *
-     * @param env
-     *
-     * @return
-     */
-    public static PathSynchronizer create( Map<String, Object> env )
-    {
-        return create( env, PathSynchronizer::new );
-    }
-
-    /**
-     * Create a PathSynchronizer. This will use the supplier just once, so subsequent calls on the same environment will share
-     * the same instance, so actions on the same path will be atomic, specifically writes to some remote store will block reads
-     * to the same path until that action has been completed.
-     *
-     * @param env
-     * @param s
-     *
-     * @return
-     */
-    public static PathSynchronizer create( Map<String, Object> env, Supplier<PathSynchronizer> s )
-    {
-        Objects.requireNonNull( env, "No environment" );
-        return (PathSynchronizer) env.computeIfAbsent( PathSynchronizer.class.getName(), k -> s.get() );
-    }
-
-    /**
      * Execute a task with the given Path locked so that multiple tasks for the same path will run atomically
      *
      * @param key Path
@@ -79,7 +48,6 @@ public class PathSynchronizer
     public final void execute( String key, Callable<Void> t )
             throws IOException
     {
-        final boolean recursiveCall = lock.isHeldByCurrentThread();
         lock.lock();
         try {
             // If a condition exists then wait
@@ -87,29 +55,28 @@ public class PathSynchronizer
             if( c == null ) {
                 c = lock.newCondition();
                 conditions.put( key, c );
-            }
-            else if( !recursiveCall ) {
-                c.await();
-            }
 
-            try {
-                t.call();
-            }
-            catch( Exception ex ) {
-
-                if( ex instanceof IOException ) {
-                    throw (IOException) ex;
+                lock.unlock();
+                try {
+                    t.call();
                 }
-                if( ex instanceof UncheckedIOException ) {
-                    throw ((UncheckedIOException) ex).getCause();
+                catch( Exception ex ) {
+                    if( ex instanceof IOException ) {
+                        throw (IOException) ex;
+                    }
+                    if( ex instanceof UncheckedIOException ) {
+                        throw ((UncheckedIOException) ex).getCause();
+                    }
+                    throw new IOException( ex );
                 }
-                throw new IOException( ex );
-            }
-            finally {
-                c.signalAll();
-                if( !recursiveCall ) {
+                finally {
+                    lock.lock();
+                    c.signalAll();
                     conditions.remove( key );
                 }
+            }
+            else {
+                c.await();
             }
         }
         catch( InterruptedException ex ) {

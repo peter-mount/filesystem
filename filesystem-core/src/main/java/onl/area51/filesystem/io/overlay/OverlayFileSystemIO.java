@@ -57,8 +57,7 @@ public abstract class OverlayFileSystemIO
         this( delegate, pathSynchronizer, null, sender );
     }
 
-    public OverlayFileSystemIO( FileSystemIO delegate, PathSynchronizer pathSynchronizer, OverlayRetriever retriever,
-                                OverlaySender sender )
+    private OverlayFileSystemIO( FileSystemIO delegate, PathSynchronizer pathSynchronizer, OverlayRetriever retriever, OverlaySender sender )
     {
         super( delegate );
         this.pathSynchronizer = pathSynchronizer;

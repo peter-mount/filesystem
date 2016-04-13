@@ -29,6 +29,8 @@ import onl.area51.httpd.util.PathEntity;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPut;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
 /**
  *
@@ -65,10 +67,12 @@ public class HttpSender
             put.setHeader( USER_AGENT, getUserAgent() );
             put.setEntity( entity );
 
-            HttpResponse response = getClient().execute( put );
+            try( CloseableHttpClient client = HttpClients.createDefault() ) {
+                HttpResponse response = client.execute( put );
 
-            int returnCode = response.getStatusLine().getStatusCode();
-            LOG.log( Level.INFO, () -> "ReturnCode " + returnCode + ": " + response.getStatusLine().getReasonPhrase() );
+                int returnCode = response.getStatusLine().getStatusCode();
+                LOG.log( Level.INFO, () -> "ReturnCode " + returnCode + ": " + response.getStatusLine().getReasonPhrase() );
+            }
         }
         catch( URISyntaxException ex ) {
             throw new IOException( String.valueOf( path ), ex );

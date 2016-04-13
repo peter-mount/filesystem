@@ -26,8 +26,6 @@ import onl.area51.filesystem.AbstractFileSystem;
 import onl.area51.filesystem.FileSystemUtils;
 import onl.area51.filesystem.io.FileSystemIO;
 import onl.area51.filesystem.io.overlay.OverlayFileSystemIO;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 
 /**
  * {@link OverlayFileSystemIO} implementation to retrieve content from a remote HTTP/HTTPS server
@@ -43,7 +41,6 @@ public abstract class AbstractHttpClient
 
     private final FileSystemIO delegate;
     private final AbstractFileSystem fileSystem;
-    private final CloseableHttpClient client;
     private final URI remoteUrl;
     private final String userAgent;
 
@@ -73,17 +70,11 @@ public abstract class AbstractHttpClient
             throw new IllegalArgumentException( ex );
         }
 
-        client = HttpClients.createDefault();
     }
 
     protected final FileSystemIO getDelegate()
     {
         return delegate;
-    }
-
-    protected final CloseableHttpClient getClient()
-    {
-        return client;
     }
 
     protected final URI getRemoteUrl()

@@ -18,22 +18,19 @@ package onl.area51.filesystem.s3;
 import java.util.Map;
 import onl.area51.filesystem.io.FileSystemIO;
 import onl.area51.filesystem.io.overlay.OverlayFileSystemIO;
-import onl.area51.filesystem.io.overlay.PathSynchronizer;
 import org.kohsuke.MetaInfServices;
 
 /**
  *
  * @author peter
  */
-@MetaInfServices( OverlayFileSystemIO.class )
+@MetaInfServices(OverlayFileSystemIO.class)
 public class S3Write
         extends OverlayFileSystemIO
 {
 
     public S3Write( FileSystemIO delegate, Map<String, Object> env )
     {
-        super( delegate,
-               PathSynchronizer.create( env ),
-               new S3Sender( delegate, env ) );
+        super( delegate, new S3Sender( delegate, env ) );
     }
 }

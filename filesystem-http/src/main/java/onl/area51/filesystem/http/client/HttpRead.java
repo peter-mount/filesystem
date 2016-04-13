@@ -33,10 +33,7 @@ public class HttpRead
 
     public HttpRead( FileSystemIO delegate, Map<String, Object> env )
     {
-        super( delegate,
-               PathSynchronizer.create( env ),
-               new HttpRetriever( delegate, env )
-        );
+        super( delegate, new PathSynchronizer(), new HttpRetriever( delegate, env ) );
     }
 
 }
