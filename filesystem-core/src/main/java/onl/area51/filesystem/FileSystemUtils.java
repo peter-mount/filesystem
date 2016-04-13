@@ -49,7 +49,6 @@ import onl.area51.filesystem.io.FileSystemIO;
  */
 public class FileSystemUtils
 {
-
     /**
      * System property holding the cache base directory
      */

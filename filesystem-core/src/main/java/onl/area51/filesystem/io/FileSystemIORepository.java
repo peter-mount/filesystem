@@ -147,11 +147,6 @@ public class FileSystemIORepository
         return create( FileSystemUtils.getString( env, KEY, "" ), basePath, env, defaultIO );
     }
 
-    public static FileSystemIO create( String type, Path basePath, Map<String, ?> env )
-    {
-        return create( type, basePath, env, Cache::new );
-    }
-
     public static FileSystemIO create( String type, Path basePath, Map<String, ?> env, BiFunction<Path, Map<String, ?>, FileSystemIO> defaultIO )
     {
         FileSystemIO io = IMPLEMENTATIONS.getOrDefault( type == null ? "" : type.trim().toLowerCase(), defaultIO ).apply( basePath, env );

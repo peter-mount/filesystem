@@ -53,7 +53,7 @@ public class MemoryFileSystemProvider
     }
 
     @Override
-    protected MemoryFileSystem createFileSystem( URI uri, Path p, Map<String, ?> env )
+    protected MemoryFileSystem createFileSystem( URI uri, Path p, Map<String, Object> env )
             throws IOException
     {
         return new MemoryFileSystem( uri, this, p, env, Flat::new );

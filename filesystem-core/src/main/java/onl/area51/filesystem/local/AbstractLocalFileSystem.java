@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import onl.area51.filesystem.AbstractFileSystem;
 import onl.area51.filesystem.AbstractPath;
@@ -34,23 +35,21 @@ public abstract class AbstractLocalFileSystem<F extends AbstractFileSystem<F, P,
 
     private final Path cachePath;
 
-    public AbstractLocalFileSystem( URI uri, FileSystemProvider provider, Path cachePath, Map<String, ?> env,
+    public AbstractLocalFileSystem( URI uri, FileSystemProvider provider, Path cachePath, Map<String, Object> env,
                                     BiFunction<Path, Map<String, ?>, FileSystemIO> fileSystemIO )
             throws IOException
     {
         super( uri, provider, env, cachePath, fileSystemIO );
-        
+
         this.cachePath = getFileSystemIO().getBaseDirectory();
 
-        if( Files.notExists( cachePath ) )
-        {
+        if( Files.notExists( cachePath ) ) {
             Files.createDirectories( cachePath );
         }
 
         // sm and existence check
         cachePath.getFileSystem().provider().checkAccess( cachePath, AccessMode.READ );
-        if( !Files.isWritable( cachePath ) )
-        {
+        if( !Files.isWritable( cachePath ) ) {
             setReadOnly( true );
         }
     }
@@ -58,7 +57,7 @@ public abstract class AbstractLocalFileSystem<F extends AbstractFileSystem<F, P,
     @Override
     public String toString()
     {
-        return cachePath.toString();
+        return Objects.toString( cachePath );
     }
 
     public Path getCachePath()
@@ -70,12 +69,10 @@ public abstract class AbstractLocalFileSystem<F extends AbstractFileSystem<F, P,
     public void close()
             throws IOException
     {
-        try
-        {
+        try {
             ((AbstractLocalFileSystemProvider) provider()).deleteFileSystem( this );
         }
-        finally
-        {
+        finally {
             getFileSystemIO().close();
         }
     }

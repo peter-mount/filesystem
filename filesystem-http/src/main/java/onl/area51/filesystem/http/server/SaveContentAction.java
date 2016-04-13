@@ -24,6 +24,7 @@ import onl.area51.httpd.action.Request;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
 import org.apache.http.HttpStatus;
 import org.apache.http.entity.StringEntity;
 
@@ -36,22 +37,24 @@ public class SaveContentAction
 {
 
     @Override
-    public void apply( Request req )
+    public void apply( Request request )
             throws HttpException,
                    IOException
     {
-        Path path = req.getAttribute( "path" );
+        Path path = request.getAttribute( "path" );
+
+        HttpRequest req = request.getHttpRequest();
 
         if( path != null && req instanceof HttpEntityEnclosingRequest ) {
-            HttpEntityEnclosingRequest request = (HttpEntityEnclosingRequest) req;
-            HttpEntity entity = request.getEntity();
+            HttpEntityEnclosingRequest entityRequest = (HttpEntityEnclosingRequest) req;
+            HttpEntity entity = entityRequest.getEntity();
             Files.copy( entity.getContent(), path, StandardCopyOption.REPLACE_EXISTING );
-            req.getHttpResponse().setStatusCode( HttpStatus.SC_OK );
-            req.getHttpResponse().setEntity( new StringEntity( "OK" ) );
+            request.getHttpResponse().setStatusCode( HttpStatus.SC_OK );
+            request.getHttpResponse().setEntity( new StringEntity( "OK" ) );
         }
         else {
-            req.getHttpResponse().setStatusCode( HttpStatus.SC_BAD_REQUEST );
-            req.getHttpResponse().setEntity( new StringEntity( "BAD REQUEST" ) );
+            request.getHttpResponse().setStatusCode( HttpStatus.SC_BAD_REQUEST );
+            request.getHttpResponse().setEntity( new StringEntity( "BAD REQUEST" ) );
         }
     }
 

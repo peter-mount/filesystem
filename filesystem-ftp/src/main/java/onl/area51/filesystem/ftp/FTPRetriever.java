@@ -15,11 +15,30 @@
  */
 package onl.area51.filesystem.ftp;
 
+import java.io.IOException;
+import java.util.Map;
+import onl.area51.filesystem.io.FileSystemIO;
+import onl.area51.filesystem.io.overlay.OverlayRetriever;
+
 /**
- * FTP FileSystem
+ *
  * @author peter
  */
-public class FTP
+public class FTPRetriever
+        extends AbstractFTPRetriever
+        implements OverlayRetriever
 {
-    
+
+    public FTPRetriever( FileSystemIO delegate, Map<String, ?> env )
+    {
+        super( delegate, env );
+    }
+
+    @Override
+    public void retrieve( char[] path )
+            throws IOException
+    {
+        throw new UnsupportedOperationException( "Not supported yet." ); //To change body of generated methods, choose Tools | Templates.
+    }
+
 }

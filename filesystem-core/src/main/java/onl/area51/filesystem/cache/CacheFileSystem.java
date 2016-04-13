@@ -32,7 +32,7 @@ public class CacheFileSystem
         extends AbstractLocalFileSystem<CacheFileSystem, CachePath, CacheFileStore>
 {
 
-    CacheFileSystem( URI uri, CacheFileSystemProvider provider, Path cachePath, Map<String, ?> env,
+    CacheFileSystem( URI uri, CacheFileSystemProvider provider, Path cachePath, Map<String, Object> env,
                      BiFunction<Path, Map<String, ?>, FileSystemIO> fileSystemIO )
             throws IOException
     {

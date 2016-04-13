@@ -23,12 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
@@ -41,16 +36,15 @@ public class PathSynchronizer
         implements Closeable
 {
 
-    private final Lock lock = new ReentrantLock();
+    private final ReentrantLock lock = new ReentrantLock();
     private final Map<String, Condition> conditions = new HashMap<>();
-
-    private final ExecutorService executorService;
 
     /**
      * Convenience method to create a single thread PathSynchronizer. This is the same as
      * {@code create(env, ()-> new PathSynchronzier());}
      *
      * @param env
+     *
      * @return
      */
     public static PathSynchronizer create( Map<String, Object> env )
@@ -65,6 +59,7 @@ public class PathSynchronizer
      *
      * @param env
      * @param s
+     *
      * @return
      */
     public static PathSynchronizer create( Map<String, Object> env, Supplier<PathSynchronizer> s )
@@ -74,118 +69,69 @@ public class PathSynchronizer
     }
 
     /**
-     * Create a single thread synchronizer.
-     *
-     * Note: You should only use this constructor when using {@link #create(java.util.Map, java.util.function.Supplier) } method
-     * otherwise you may find that reads and writes lock each other.
-     */
-    public PathSynchronizer()
-    {
-        this( Executors.newSingleThreadExecutor() );
-    }
-
-    /**
-     * Create a synchronzier that uses a work stealing thread pool.
-     *
-     * Note: You should only use this constructor when using {@link #create(java.util.Map, java.util.function.Supplier) } method
-     * otherwise you may find that reads and writes lock each other.
-     *
-     * @param parallelism 0 = number of cores of system otherwise the targeted parallelism level
-     */
-    public PathSynchronizer( int parallelism )
-    {
-        this( parallelism == 0 ? Executors.newWorkStealingPool() : Executors.newWorkStealingPool( parallelism ) );
-    }
-
-    /**
-     * Create a synchronizer using an ExecutorService
-     *
-     * Note: You should only use this constructor when using {@link #create(java.util.Map, java.util.function.Supplier) } method
-     * otherwise you may find that reads and writes lock each other.
-     *
-     * @param executor
-     */
-    public PathSynchronizer( ExecutorService executor )
-    {
-        this.executorService = executor;
-    }
-
-    /**
-     * The ExecutorService in use
-     * @return 
-     */
-    public final ExecutorService getExecutorService()
-    {
-        return executorService;
-    }
-
-    /**
      * Execute a task with the given Path locked so that multiple tasks for the same path will run atomically
+     *
      * @param key Path
-     * @param t Task
-     * @throws IOException 
+     * @param t   Task
+     *
+     * @throws IOException
      */
     public final void execute( String key, Callable<Void> t )
             throws IOException
     {
+        final boolean recursiveCall = lock.isHeldByCurrentThread();
         lock.lock();
-        try
-        {
+        try {
+            // If a condition exists then wait
             Condition c = conditions.get( key );
-            if( c == null )
-            {
+            if( c == null ) {
                 c = lock.newCondition();
                 conditions.put( key, c );
-                lock.unlock();
-                try
-                {
-                    Future<Void> f = executorService.submit( t );
-                    f.get();
+            }
+            else if( !recursiveCall ) {
+                c.await();
+            }
+
+            try {
+                t.call();
+            }
+            catch( Exception ex ) {
+
+                if( ex instanceof IOException ) {
+                    throw (IOException) ex;
                 }
-                finally
-                {
-                    lock.lock();
-                    c.signalAll();
+                if( ex instanceof UncheckedIOException ) {
+                    throw ((UncheckedIOException) ex).getCause();
+                }
+                throw new IOException( ex );
+            }
+            finally {
+                c.signalAll();
+                if( !recursiveCall ) {
                     conditions.remove( key );
                 }
             }
-            else
-            {
-                c.await();
-            }
-        } catch( InterruptedException ex )
-        {
-            throw new IOException( ex );
-        } catch( ExecutionException ex )
-        {
-            Throwable tr = ex.getCause();
-            if( tr instanceof UncheckedIOException )
-            {
-                IOException cause = ((UncheckedIOException) tr).getCause();
-                throw new IOException( cause.getMessage(), cause );
-            }
-            else
-            {
-                throw new IOException( tr.getMessage(), tr );
-            }
         }
-        finally
-        {
+        catch( InterruptedException ex ) {
+            throw new IOException( ex );
+        }
+        finally {
             lock.unlock();
         }
     }
 
     /**
      * Execute a task with the given Path locked so that multiple tasks for the same path will run atomically
+     *
      * @param key Path
-     * @param t Task
-     * @throws IOException 
+     * @param t   Task
+     *
+     * @throws IOException
      */
     public final void execute( char[] key, Callable<Void> t )
             throws IOException
     {
-        if( key == null || key.length == 0 )
-        {
+        if( key == null || key.length == 0 ) {
             throw new FileNotFoundException( "/" );
         }
         execute( String.valueOf( key ), t );
@@ -193,21 +139,18 @@ public class PathSynchronizer
 
     /**
      * Close this synchronizer
-     * @throws IOException 
+     *
+     * @throws IOException
      */
     @Override
     public void close()
             throws IOException
     {
-        executorService.shutdownNow();
-
         lock.lock();
-        try
-        {
+        try {
             conditions.values().forEach( Condition::signalAll );
         }
-        finally
-        {
+        finally {
             lock.unlock();
         }
     }

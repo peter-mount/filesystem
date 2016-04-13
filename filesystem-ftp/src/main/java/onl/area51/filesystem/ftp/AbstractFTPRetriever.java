@@ -13,26 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package onl.area51.filesystem.http.client;
+package onl.area51.filesystem.ftp;
 
 import java.util.Map;
+import onl.area51.filesystem.ftp.client.FTPClient;
 import onl.area51.filesystem.io.FileSystemIO;
-import onl.area51.filesystem.io.overlay.OverlayFileSystemIO;
-import org.kohsuke.MetaInfServices;
 
 /**
- * {@link OverlayFileSystemIO} implementation to retrieve content from a remote HTTP/HTTPS server
  *
  * @author peter
  */
-@MetaInfServices(OverlayFileSystemIO.class)
-public class Http
-        extends HttpRead
+public class AbstractFTPRetriever
 {
 
-    public Http( FileSystemIO delegate, Map<String, Object> env )
+    private final FileSystemIO delegate;
+    private final Map<String, ?> env;
+    private FTPClient ftpClient;
+
+    public AbstractFTPRetriever( FileSystemIO delegate, Map<String, ?> env )
     {
-        super( delegate, env );
+        this.delegate = delegate;
+        this.env = env;
     }
 
+    protected synchronized FTPClient getFTPClient()
+    {
+        return ftpClient;
+    }
 }

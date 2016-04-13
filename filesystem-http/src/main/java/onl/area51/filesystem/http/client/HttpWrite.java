@@ -18,6 +18,7 @@ package onl.area51.filesystem.http.client;
 import java.util.Map;
 import onl.area51.filesystem.io.FileSystemIO;
 import onl.area51.filesystem.io.overlay.OverlayFileSystemIO;
+import onl.area51.filesystem.io.overlay.PathSynchronizer;
 import org.kohsuke.MetaInfServices;
 
 /**
@@ -26,13 +27,16 @@ import org.kohsuke.MetaInfServices;
  * @author peter
  */
 @MetaInfServices(OverlayFileSystemIO.class)
-public class Http
-        extends HttpRead
+public class HttpWrite
+        extends OverlayFileSystemIO
 {
 
-    public Http( FileSystemIO delegate, Map<String, Object> env )
+    public HttpWrite( FileSystemIO delegate, Map<String, Object> env )
     {
-        super( delegate, env );
+        super( delegate,
+               PathSynchronizer.create( env ),
+               new HttpSender( delegate, env )
+        );
     }
 
 }

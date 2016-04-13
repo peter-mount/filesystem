@@ -31,7 +31,7 @@ public class LocalFileSystem
         extends AbstractLocalFileSystem<LocalFileSystem, LocalPath, LocalFileStore>
 {
 
-    LocalFileSystem( URI uri, LocalFileSystemProvider provider, Path cachePath, Map<String, ?> env, BiFunction<Path, Map<String, ?>, FileSystemIO> fileSystemIO )
+    LocalFileSystem( URI uri, LocalFileSystemProvider provider, Path cachePath, Map<String, Object> env, BiFunction<Path, Map<String, ?>, FileSystemIO> fileSystemIO )
             throws IOException
     {
         super( uri, provider, cachePath, env, fileSystemIO );

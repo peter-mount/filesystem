@@ -41,7 +41,7 @@ public class LocalFileSystemProvider
     }
 
     @Override
-    protected LocalFileSystem createFileSystem( URI uri, Path p, Map<String, ?> env )
+    protected LocalFileSystem createFileSystem( URI uri, Path p, Map<String, Object> env )
             throws IOException
     {
         return new LocalFileSystem( uri, this, p, env, Flat::new );

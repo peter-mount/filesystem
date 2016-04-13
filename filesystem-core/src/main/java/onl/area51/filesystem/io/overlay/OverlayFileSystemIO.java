@@ -70,8 +70,7 @@ public abstract class OverlayFileSystemIO
     public boolean exists( char[] path )
             throws IOException
     {
-        if( super.exists( path ) )
-        {
+        if( super.exists( path ) ) {
             return true;
         }
         retrieve( path );
@@ -82,12 +81,10 @@ public abstract class OverlayFileSystemIO
     public InputStream newInputStream( char[] path )
             throws IOException
     {
-        if( retriever == null )
-        {
+        if( retriever == null ) {
             return getDelegate().newInputStream( path );
         }
-        else
-        {
+        else {
             return newInputStreamRemote( path );
         }
     }
@@ -96,12 +93,10 @@ public abstract class OverlayFileSystemIO
     public OutputStream newOutputStream( char[] path, OpenOption... options )
             throws IOException
     {
-        if( sender == null )
-        {
+        if( sender == null ) {
             return getDelegate().newOutputStream( path, options );
         }
-        else
-        {
+        else {
             return new OverlayOutputStream( sender, pathSynchronizer, path, getDelegate().newOutputStream( path, options ) );
         }
     }
@@ -109,13 +104,11 @@ public abstract class OverlayFileSystemIO
     protected final InputStream newInputStreamRemote( char[] path )
             throws IOException
     {
-        if( exists( path ) )
-        {
-            try
-            {
+        if( exists( path ) ) {
+            try {
                 return getDelegate().newInputStream( path );
-            } catch( FileNotFoundException ex )
-            {
+            }
+            catch( FileNotFoundException ex ) {
             }
         }
 
@@ -126,17 +119,13 @@ public abstract class OverlayFileSystemIO
     private void retrieve( char[] path )
             throws IOException
     {
-        if( pathSynchronizer == null )
-        {
+        if( pathSynchronizer == null ) {
             retriever.retrieve( path );
         }
-        else
-        {
-            pathSynchronizer.execute( path, ()
-                                      -> 
-                                      {
-                                          retriever.retrieve( path );
-                                          return null;
+        else {
+            pathSynchronizer.execute( path, () -> {
+                                  retriever.retrieve( path );
+                                  return null;
                               } );
         }
     }
@@ -145,15 +134,12 @@ public abstract class OverlayFileSystemIO
     public void close()
             throws IOException
     {
-        try
-        {
-            if( pathSynchronizer != null )
-            {
+        try {
+            if( pathSynchronizer != null ) {
                 pathSynchronizer.close();
             }
         }
-        finally
-        {
+        finally {
             super.close();
         }
     }

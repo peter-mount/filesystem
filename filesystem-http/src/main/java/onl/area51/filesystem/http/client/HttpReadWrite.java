@@ -18,21 +18,28 @@ package onl.area51.filesystem.http.client;
 import java.util.Map;
 import onl.area51.filesystem.io.FileSystemIO;
 import onl.area51.filesystem.io.overlay.OverlayFileSystemIO;
+import onl.area51.filesystem.io.overlay.PathSynchronizer;
 import org.kohsuke.MetaInfServices;
 
 /**
- * {@link OverlayFileSystemIO} implementation to retrieve content from a remote HTTP/HTTPS server
+ * {@link OverlayFileSystemIO} implementation to retrieve and send content from a remote HTTP/HTTPS server.
+ * <p>
+ * Normally this should match Http (like S3 is) but we have that as an alias for HttpRead
  *
  * @author peter
  */
 @MetaInfServices(OverlayFileSystemIO.class)
-public class Http
-        extends HttpRead
+public class HttpReadWrite
+        extends OverlayFileSystemIO
 {
 
-    public Http( FileSystemIO delegate, Map<String, Object> env )
+    public HttpReadWrite( FileSystemIO delegate, Map<String, Object> env )
     {
-        super( delegate, env );
+        super( delegate,
+               PathSynchronizer.create( env ),
+               new HttpRetriever( delegate, env ),
+               new HttpSender( delegate, env )
+        );
     }
 
 }

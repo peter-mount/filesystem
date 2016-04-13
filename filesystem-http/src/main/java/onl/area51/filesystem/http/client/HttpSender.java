@@ -22,32 +22,32 @@ import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import onl.area51.filesystem.FileSystemUtils;
+import static onl.area51.filesystem.http.client.AbstractHttpClient.USER_AGENT;
 import onl.area51.filesystem.io.FileSystemIO;
-import onl.area51.filesystem.io.overlay.OverlayFileSystemIO;
+import onl.area51.filesystem.io.overlay.OverlaySender;
+import onl.area51.httpd.util.PathEntity;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import onl.area51.filesystem.io.overlay.OverlayRetriever;
+import org.apache.http.client.methods.HttpPut;
 
 /**
- * {@link OverlayFileSystemIO} implementation to retrieve content from a remote HTTP/HTTPS server
  *
  * @author peter
  */
-public class HttpRetriever
+public class HttpSender
         extends AbstractHttpClient
-        implements OverlayRetriever
+        implements OverlaySender
 {
 
     private static final Logger LOG = Logger.getLogger( "HTTP" );
 
-    public HttpRetriever( FileSystemIO delegate, Map<String, Object> env )
+    public HttpSender( FileSystemIO delegate, Map<String, Object> env )
     {
         super( delegate, env );
     }
 
     @Override
-    public void retrieve( char[] path )
+    public void send( char[] path )
             throws IOException
     {
         try {
@@ -56,28 +56,19 @@ public class HttpRetriever
             }
 
             URI uri = getRemoteURI( path );
-            
-            LOG.log( Level.INFO, () -> "Retrieving " + uri );
 
-            HttpGet get = new HttpGet( uri );
-            get.setHeader( USER_AGENT, getUserAgent() );
+            HttpEntity entity = new PathEntity( getPath( path ) );
 
-            HttpResponse response = getClient().execute( get );
+            LOG.log( Level.INFO, () -> "Sending " + uri );
+
+            HttpPut put = new HttpPut( uri );
+            put.setHeader( USER_AGENT, getUserAgent() );
+            put.setEntity( entity );
+
+            HttpResponse response = getClient().execute( put );
 
             int returnCode = response.getStatusLine().getStatusCode();
             LOG.log( Level.INFO, () -> "ReturnCode " + returnCode + ": " + response.getStatusLine().getReasonPhrase() );
-
-            switch( returnCode ) {
-                case 200:
-                case 304:
-                    FileSystemUtils.copyFromRemote( () -> response.getEntity().getContent(), getDelegate(), path );
-                    break;
-
-                case 404:
-                case 500:
-                default:
-                    throw new FileNotFoundException( String.valueOf( path ) );
-            }
         }
         catch( URISyntaxException ex ) {
             throw new IOException( String.valueOf( path ), ex );

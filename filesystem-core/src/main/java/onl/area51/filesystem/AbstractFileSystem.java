@@ -52,13 +52,15 @@ public abstract class AbstractFileSystem<F extends AbstractFileSystem<F, P, S>, 
     private boolean readOnly = false;
     private final FileSystemIO fileSystemIO;
 
-    protected AbstractFileSystem( URI uri, FileSystemProvider provider, Map<String, ?> env,
+    @SuppressWarnings("LeakingThisInConstructor")
+    protected AbstractFileSystem( URI uri, FileSystemProvider provider, Map<String, Object> env,
                                   Path path,
                                   BiFunction<Path, Map<String, ?>, FileSystemIO> fileSystemIO )
             throws IOException
     {
         this.uri = uri;
         this.provider = provider;
+        env.put( FileSystem.class.getName(), this );
         this.fileSystemIO = fileSystemIO.apply( path, env );
 
         readOnly = FileSystemUtils.isTrue( env, "readOnly" );

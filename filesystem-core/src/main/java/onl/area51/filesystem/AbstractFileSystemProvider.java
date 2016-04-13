@@ -63,10 +63,10 @@ public abstract class AbstractFileSystemProvider<F extends AbstractFileSystem<F,
         return path;
     }
 
-    protected abstract F createFileSystem( URI uri, Path p, Map<String, ?> env )
+    protected abstract F createFileSystem( URI uri, Path p, Map<String, Object> env )
             throws IOException;
 
-    private F createFileSystem( URI uri, Map<String, ?> env )
+    private F createFileSystem( URI uri, Map<String, Object> env )
     {
         try {
             return createFileSystem( uri, uriToPath( uri ).toRealPath(), env );
@@ -81,7 +81,7 @@ public abstract class AbstractFileSystemProvider<F extends AbstractFileSystem<F,
             throws IOException
     {
         return filesystems.computeIfAbsent( FileSystemUtils.getFileSystemURI( uri ),
-                                            fsUri -> createFileSystem( fsUri, FileSystemUtils.getFileSystemEnv( uri, env ) ) );
+                                            fsUri -> createFileSystem(fsUri, (Map<String, Object>) FileSystemUtils.getFileSystemEnv( uri, env )) );
     }
 
     public final void deleteFileSystem( FileSystem fs )
@@ -100,7 +100,7 @@ public abstract class AbstractFileSystemProvider<F extends AbstractFileSystem<F,
         }
 
         Files.createDirectories( path );
-        return createFileSystem( path.toUri(), path, env );
+        return createFileSystem(path.toUri(), path, (Map<String, Object>) env);
     }
 
     @Override

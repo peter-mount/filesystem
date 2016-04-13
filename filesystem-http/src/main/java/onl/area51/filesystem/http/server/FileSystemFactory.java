@@ -100,4 +100,9 @@ public class FileSystemFactory
         };
     }
 
+    public static Action extractPathMayNotExist( FileSystem fs )
+    {
+        return r -> r.getAttribute( "path", () -> getPath( r.getHttpRequest().getRequestLine().getUri(), fs ) );
+    }
+
 }

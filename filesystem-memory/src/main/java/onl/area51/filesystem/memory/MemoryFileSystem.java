@@ -33,7 +33,7 @@ public class MemoryFileSystem
 
     private MemoryFileStore fileStore;
 
-    MemoryFileSystem( URI uri, MemoryFileSystemProvider provider, Path cachePath, Map<String, ?> env,
+    MemoryFileSystem( URI uri, MemoryFileSystemProvider provider, Path cachePath, Map<String, Object> env,
                       BiFunction<Path, Map<String, ?>, FileSystemIO> fileSystemIO )
             throws IOException
     {

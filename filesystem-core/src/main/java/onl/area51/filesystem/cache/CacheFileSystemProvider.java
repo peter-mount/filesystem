@@ -42,7 +42,7 @@ public class CacheFileSystemProvider
     }
 
     @Override
-    protected CacheFileSystem createFileSystem( URI uri, Path p, Map<String, ?> env )
+    protected CacheFileSystem createFileSystem( URI uri, Path p, Map<String, Object> env )
             throws IOException
     {
         return new CacheFileSystem( uri, this, p, env, FileSystemIORepository::create );
