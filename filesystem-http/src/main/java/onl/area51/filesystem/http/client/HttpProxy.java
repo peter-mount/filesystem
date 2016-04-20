@@ -15,32 +15,25 @@
  */
 package onl.area51.filesystem.http.client;
 
-import java.io.IOException;
 import java.util.Map;
 import onl.area51.filesystem.io.FileSystemIO;
 import onl.area51.filesystem.io.overlay.OverlayFileSystemIO;
-import onl.area51.filesystem.io.overlay.OverlayRetriever;
+import onl.area51.filesystem.io.overlay.PathSynchronizer;
+import org.kohsuke.MetaInfServices;
 
 /**
- * {@link OverlayFileSystemIO} implementation to retrieve content from a remote HTTP/HTTPS server
+ * {@link OverlayFileSystemIO} implementation to retrieve content from multiple remote HTTP/HTTPS servers
  *
  * @author peter
  */
-public class HttpRetriever
-        extends AbstractHttpClient
-        implements OverlayRetriever
+@MetaInfServices(OverlayFileSystemIO.class)
+public class HttpProxy
+        extends OverlayFileSystemIO
 {
 
-    public HttpRetriever( FileSystemIO delegate, Map<String, Object> env )
+    public HttpProxy( FileSystemIO delegate, Map<String, Object> env )
     {
-        super( delegate, env );
-    }
-
-    @Override
-    public void retrieve( char[] path )
-            throws IOException
-    {
-        HttpUtils.retrieve( path, this::getRemoteURI, this::getDelegate, this::getUserAgent );
+        super( delegate, new PathSynchronizer(), new HttpProxyRetriever( delegate, env ) );
     }
 
 }

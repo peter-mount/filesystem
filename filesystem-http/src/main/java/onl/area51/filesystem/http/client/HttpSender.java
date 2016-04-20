@@ -15,22 +15,11 @@
  */
 package onl.area51.filesystem.http.client;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import static onl.area51.filesystem.http.client.AbstractHttpClient.USER_AGENT;
 import onl.area51.filesystem.io.FileSystemIO;
 import onl.area51.filesystem.io.overlay.OverlaySender;
-import onl.area51.httpd.util.PathEntity;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 
 /**
  *
@@ -52,31 +41,7 @@ public class HttpSender
     public void send( char[] path )
             throws IOException
     {
-        try {
-            if( path == null || path.length == 0 ) {
-                throw new FileNotFoundException( "/" );
-            }
-
-            URI uri = getRemoteURI( path );
-
-            HttpEntity entity = new PathEntity( getPath( path ) );
-
-            LOG.log( Level.INFO, () -> "Sending " + uri );
-
-            HttpPut put = new HttpPut( uri );
-            put.setHeader( USER_AGENT, getUserAgent() );
-            put.setEntity( entity );
-
-            try( CloseableHttpClient client = HttpClients.createDefault() ) {
-                HttpResponse response = client.execute( put );
-
-                int returnCode = response.getStatusLine().getStatusCode();
-                LOG.log( Level.INFO, () -> "ReturnCode " + returnCode + ": " + response.getStatusLine().getReasonPhrase() );
-            }
-        }
-        catch( URISyntaxException ex ) {
-            throw new IOException( String.valueOf( path ), ex );
-        }
+        HttpUtils.send( path, this::getRemoteURI, this::getPath, this::getUserAgent );
     }
 
 }

@@ -15,16 +15,11 @@
  */
 package onl.area51.filesystem.http.client;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLDecoder;
-import java.nio.file.FileSystem;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
-import onl.area51.filesystem.AbstractFileSystem;
 import onl.area51.filesystem.FileSystemUtils;
 import onl.area51.filesystem.io.FileSystemIO;
 import onl.area51.filesystem.io.overlay.OverlayFileSystemIO;
@@ -35,23 +30,16 @@ import onl.area51.filesystem.io.overlay.OverlayFileSystemIO;
  * @author peter
  */
 public abstract class AbstractHttpClient
+        extends AbstractBaseHttpClient
 {
 
     private static final String URL = "remoteUrl";
-    protected static final String USER_AGENT = "User-Agent";
-    protected static final String DEFAULT_USER_AGENT = "Area51 Mozilla/5.0 (Linux x86_64)";
 
-    private final FileSystemIO delegate;
-    private final AbstractFileSystem fileSystem;
     private final URI remoteUrl;
-    private final String userAgent;
 
     public AbstractHttpClient( FileSystemIO delegate, Map<String, Object> env )
     {
-        this.delegate = delegate;
-        fileSystem = (AbstractFileSystem) env.get( FileSystem.class.getName() );
-
-        userAgent = FileSystemUtils.getString( env, USER_AGENT, DEFAULT_USER_AGENT );
+        super( delegate, env );
 
         try {
             Object url = Objects.requireNonNull( FileSystemUtils.get( env, URL ), URL + " not defined" );
@@ -67,53 +55,16 @@ public abstract class AbstractHttpClient
             else {
                 throw new IllegalArgumentException( "Unsupported URL " + url );
             }
-        } catch( URISyntaxException ex ) {
+        }
+        catch( URISyntaxException ex ) {
             throw new IllegalArgumentException( ex );
         }
 
     }
 
-    protected final FileSystemIO getDelegate()
-    {
-        return delegate;
-    }
-
-    protected final URI getRemoteUrl()
+    @Override
+    protected URI getRemoteServerUrl( char[] path )
     {
         return remoteUrl;
-    }
-
-    protected final String getUserAgent()
-    {
-        return userAgent;
-    }
-
-    protected final URI getRemoteURI( char[] path )
-            throws URISyntaxException,
-                   UnsupportedEncodingException
-    {
-        StringBuilder b = new StringBuilder().append( remoteUrl.getPath() );
-
-        if( b.length() == 0 || b.charAt( b.length() - 1 ) != '/' ) {
-            b.append( '/' );
-        }
-        if( path[0] == '/' ) {
-            b.append( path, 1, path.length );
-        }
-        else {
-            b.append( path );
-        }
-
-        return new URI( remoteUrl.getScheme(), remoteUrl.getAuthority(),
-                        URLDecoder.decode( b.toString(), "UTF-8" ),
-                        remoteUrl.getQuery(), null );
-    }
-
-    protected final Path getPath( char[] path )
-    {
-        if( fileSystem == null ) {
-            return getDelegate().getBaseDirectory().resolve( String.valueOf( path ) );
-        }
-        return fileSystem.createPath( path );
     }
 }
