@@ -15,9 +15,11 @@
  */
 package onl.area51.filesystem.http.client;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Map;
@@ -65,8 +67,7 @@ public abstract class AbstractHttpClient
             else {
                 throw new IllegalArgumentException( "Unsupported URL " + url );
             }
-        }
-        catch( URISyntaxException ex ) {
+        } catch( URISyntaxException ex ) {
             throw new IllegalArgumentException( ex );
         }
 
@@ -88,9 +89,11 @@ public abstract class AbstractHttpClient
     }
 
     protected final URI getRemoteURI( char[] path )
-            throws URISyntaxException
+            throws URISyntaxException,
+                   UnsupportedEncodingException
     {
         StringBuilder b = new StringBuilder().append( remoteUrl.getPath() );
+
         if( b.length() == 0 || b.charAt( b.length() - 1 ) != '/' ) {
             b.append( '/' );
         }
@@ -100,7 +103,10 @@ public abstract class AbstractHttpClient
         else {
             b.append( path );
         }
-        return new URI( remoteUrl.getScheme(), remoteUrl.getAuthority(), b.toString(), remoteUrl.getQuery(), null );
+
+        return new URI( remoteUrl.getScheme(), remoteUrl.getAuthority(),
+                        URLDecoder.decode( b.toString(), "UTF-8" ),
+                        remoteUrl.getQuery(), null );
     }
 
     protected final Path getPath( char[] path )
