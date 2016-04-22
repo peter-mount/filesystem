@@ -17,7 +17,6 @@ package onl.area51.filesystem.http.client;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.Path;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -30,6 +29,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import onl.area51.httpd.util.PathEntity;
 import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -66,18 +66,19 @@ public final class HttpUtils
             get.setHeader( USER_AGENT, userAgent.get() );
 
             try( CloseableHttpClient client = HttpClients.createDefault() ) {
-                HttpResponse response = client.execute( get );
+                try( CloseableHttpResponse response = client.execute( get ) ) {
 
-                int returnCode = response.getStatusLine().getStatusCode();
-                LOG.log( Level.INFO, () -> "ReturnCode " + returnCode + ": " + response.getStatusLine().getReasonPhrase() );
+                    int returnCode = response.getStatusLine().getStatusCode();
+                    LOG.log( Level.INFO, () -> "ReturnCode " + returnCode + ": " + response.getStatusLine().getReasonPhrase() );
 
-                switch( returnCode ) {
-                    case 200:
-                    case 304:
-                        FileSystemUtils.copyFromRemote( () -> response.getEntity().getContent(), delegate.get(), path );
-                        return;
+                    switch( returnCode ) {
+                        case 200:
+                        case 304:
+                            FileSystemUtils.copyFromRemote( () -> response.getEntity().getContent(), delegate.get(), path );
+                            return;
 
-                    default:
+                        default:
+                    }
                 }
             }
         }
@@ -104,10 +105,11 @@ public final class HttpUtils
             put.setEntity( entity );
 
             try( CloseableHttpClient client = HttpClients.createDefault() ) {
-                HttpResponse response = client.execute( put );
+                try( CloseableHttpResponse response = client.execute( put ) ) {
 
-                int returnCode = response.getStatusLine().getStatusCode();
-                LOG.log( Level.INFO, () -> "ReturnCode " + returnCode + ": " + response.getStatusLine().getReasonPhrase() );
+                    int returnCode = response.getStatusLine().getStatusCode();
+                    LOG.log( Level.INFO, () -> "ReturnCode " + returnCode + ": " + response.getStatusLine().getReasonPhrase() );
+                }
             }
         }
     }
