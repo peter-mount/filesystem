@@ -15,17 +15,10 @@
  */
 package onl.area51.filesystem.http.client;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLDecoder;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Objects;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import onl.area51.filesystem.AbstractFileSystem;
 import onl.area51.filesystem.FileSystemUtils;
 import onl.area51.filesystem.io.FileSystemIO;

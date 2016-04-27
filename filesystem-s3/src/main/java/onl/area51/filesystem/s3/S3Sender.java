@@ -54,12 +54,12 @@ public class S3Sender
 
         try( InputStream is = getDelegate().newInputStream( path ) )
         {
-            LOG.log( Level.INFO, () -> "Sending " + getBucketName() + ":" + pathValue );
+            LOG.log( Level.FINE, () -> "Sending " + getBucketName() + ":" + pathValue );
             getS3().putObject( new PutObjectRequest( getBucketName(), pathValue, is, meta ) );
-            LOG.log( Level.INFO, () -> "Sent " + getBucketName() + ":" + pathValue );
+            LOG.log( Level.FINE, () -> "Sent " + getBucketName() + ":" + pathValue );
         } catch( AmazonS3Exception ex )
         {
-            LOG.log( Level.INFO, () -> "Send error " + ex.getStatusCode() + " " + getBucketName() + ":" + pathValue );
+            LOG.log( Level.FINE, () -> "Send error " + ex.getStatusCode() + " " + getBucketName() + ":" + pathValue );
             throw new IOException( ex.getStatusCode() + ": Failed to put " + pathValue, ex );
         } catch( IOException ex )
         {

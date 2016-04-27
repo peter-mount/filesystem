@@ -25,7 +25,6 @@ import java.util.logging.Logger;
 import onl.area51.filesystem.FileSystemUtils;
 import onl.area51.filesystem.io.FileSystemIO;
 import onl.area51.filesystem.io.overlay.OverlayFileSystemIO;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import onl.area51.httpd.util.PathEntity;
 import org.apache.http.HttpEntity;
@@ -60,7 +59,7 @@ public final class HttpUtils
         String uri = remoteUri.apply( path );
         if( uri != null ) {
 
-            LOG.log( Level.INFO, () -> "Retrieving " + uri );
+            LOG.log( Level.FINE, () -> "Retrieving " + uri );
 
             HttpGet get = new HttpGet( uri );
             get.setHeader( USER_AGENT, userAgent.get() );
@@ -69,7 +68,7 @@ public final class HttpUtils
                 try( CloseableHttpResponse response = client.execute( get ) ) {
 
                     int returnCode = response.getStatusLine().getStatusCode();
-                    LOG.log( Level.INFO, () -> "ReturnCode " + returnCode + ": " + response.getStatusLine().getReasonPhrase() );
+                    LOG.log( Level.FINE, () -> "ReturnCode " + returnCode + ": " + response.getStatusLine().getReasonPhrase() );
 
                     switch( returnCode ) {
                         case 200:
@@ -98,7 +97,7 @@ public final class HttpUtils
 
             HttpEntity entity = new PathEntity( getPath.apply( path ) );
 
-            LOG.log( Level.INFO, () -> "Sending " + uri );
+            LOG.log( Level.FINE, () -> "Sending " + uri );
 
             HttpPut put = new HttpPut( uri );
             put.setHeader( USER_AGENT, userAgent.get() );
@@ -108,7 +107,7 @@ public final class HttpUtils
                 try( CloseableHttpResponse response = client.execute( put ) ) {
 
                     int returnCode = response.getStatusLine().getStatusCode();
-                    LOG.log( Level.INFO, () -> "ReturnCode " + returnCode + ": " + response.getStatusLine().getReasonPhrase() );
+                    LOG.log( Level.FINE, () -> "ReturnCode " + returnCode + ": " + response.getStatusLine().getReasonPhrase() );
                 }
             }
         }

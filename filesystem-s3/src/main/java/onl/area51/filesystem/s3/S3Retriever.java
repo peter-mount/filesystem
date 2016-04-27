@@ -50,13 +50,13 @@ public class S3Retriever
         String pathValue = String.valueOf( path );
         try
         {
-            LOG.log( Level.INFO, () -> "Retrieving " + getBucketName() + ":" + pathValue );
+            LOG.log( Level.FINE, () -> "Retrieving " + getBucketName() + ":" + pathValue );
             S3Object obj = getS3().getObject( new GetObjectRequest( getBucketName(), pathValue ) );
             FileSystemUtils.copyFromRemote( () -> obj.getObjectContent(), getDelegate(), path );
-            LOG.log( Level.INFO, () -> "Retrieved " + getBucketName() + ":" + pathValue );
+            LOG.log( Level.FINE, () -> "Retrieved " + getBucketName() + ":" + pathValue );
         } catch( AmazonS3Exception ex )
         {
-            LOG.log( Level.INFO, () -> "Error " + ex.getStatusCode() + " " + getBucketName() + ":" + pathValue );
+            LOG.log( Level.FINE, () -> "Error " + ex.getStatusCode() + " " + getBucketName() + ":" + pathValue );
             if( ex.getStatusCode() == 404 )
             {
                 throw new FileNotFoundException( pathValue );
