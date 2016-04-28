@@ -5,3 +5,4 @@
 /filesystem-ftp/target/
 /filesystem-s3/target/
 /filesystem-memory/target/
+/filesystem-cdi/target/

@@ -68,13 +68,13 @@ public class FileSystemIORepository
                             .forEach( action );
                 }
             }
-        }
-        catch( IOException ex ) {
+        } catch( IOException ex ) {
             throw new UncheckedIOException( ex );
         }
     }
 
-    static {
+    public static void init()
+    {
         forEach( FileSystemIO.class,
                  l -> {
                      try {
@@ -82,16 +82,14 @@ public class FileSystemIORepository
                          IMPLEMENTATIONS.computeIfAbsent( clazz.getSimpleName().toLowerCase(), k -> ( p, e ) -> {
                                                       try {
                                                           return clazz.getConstructor( Path.class, Map.class ).newInstance( p, e );
-                                                      }
-                                                      catch( NoSuchMethodException |
-                                                             InstantiationException |
-                                                             IllegalAccessException |
-                                                             InvocationTargetException ex ) {
+                                                      } catch( NoSuchMethodException |
+                                                               InstantiationException |
+                                                               IllegalAccessException |
+                                                               InvocationTargetException ex ) {
                                                           throw new RuntimeException( ex );
                                                       }
                                                   } );
-                     }
-                     catch( ClassNotFoundException ex ) {
+                     } catch( ClassNotFoundException ex ) {
                          throw new RuntimeException( ex );
                      }
                  }
@@ -110,16 +108,14 @@ public class FileSystemIORepository
                          OVERLAYS.computeIfAbsent( clazz.getSimpleName().toLowerCase(), k -> ( p, e ) -> {
                                                try {
                                                    return clazz.getConstructor( FileSystemIO.class, Map.class ).newInstance( p, e );
-                                               }
-                                               catch( NoSuchMethodException |
-                                                      InstantiationException |
-                                                      IllegalAccessException |
-                                                      InvocationTargetException ex ) {
+                                               } catch( NoSuchMethodException |
+                                                        InstantiationException |
+                                                        IllegalAccessException |
+                                                        InvocationTargetException ex ) {
                                                    throw new RuntimeException( ex );
                                                }
                                            } );
-                     }
-                     catch( ClassNotFoundException ex ) {
+                     } catch( ClassNotFoundException ex ) {
                          throw new RuntimeException( ex );
                      }
                  }
@@ -133,6 +129,10 @@ public class FileSystemIORepository
 
     }
 
+    static {
+        init();
+    }
+
     private FileSystemIORepository()
     {
     }
@@ -142,12 +142,14 @@ public class FileSystemIORepository
         return create( basePath, env, Cache::new );
     }
 
-    public static FileSystemIO create( Path basePath, Map<String, ?> env, BiFunction<Path, Map<String, ?>, FileSystemIO> defaultIO )
+    public static FileSystemIO create( Path basePath, Map<String, ?> env,
+                                       BiFunction<Path, Map<String, ?>, FileSystemIO> defaultIO )
     {
         return create( FileSystemUtils.getString( env, KEY, "" ), basePath, env, defaultIO );
     }
 
-    public static FileSystemIO create( String type, Path basePath, Map<String, ?> env, BiFunction<Path, Map<String, ?>, FileSystemIO> defaultIO )
+    public static FileSystemIO create( String type, Path basePath, Map<String, ?> env,
+                                       BiFunction<Path, Map<String, ?>, FileSystemIO> defaultIO )
     {
         FileSystemIO io = IMPLEMENTATIONS.getOrDefault( type == null ? "" : type.trim().toLowerCase(), defaultIO ).apply( basePath, env );
 
@@ -160,7 +162,7 @@ public class FileSystemIORepository
                 io = mapper.apply( io, env );
             }
             else if( o instanceof String ) {
-                for( String n: o.toString().split( "," ) ) {
+                for( String n : o.toString().split( "," ) ) {
                     mapper = OVERLAYS.get( n.trim().toLowerCase() );
                     if( mapper == null ) {
                         throw new IllegalArgumentException( "Unsupported " + WRAPPER + ": " + n );

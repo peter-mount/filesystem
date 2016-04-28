@@ -17,6 +17,7 @@
         <module>filesystem-http</module>
         <module>filesystem-memory</module>
         <module>filesystem-s3</module>
+        <module>filesystem-cdi</module>
     </modules>
     
     <properties>
