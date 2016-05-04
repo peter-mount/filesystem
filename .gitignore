@@ -6,3 +6,4 @@
 /filesystem-s3/target/
 /filesystem-memory/target/
 /filesystem-cdi/target/
+/filesystem-minio/target/

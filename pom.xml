@@ -13,11 +13,12 @@
     </description>
     
     <modules>
+        <module>filesystem-cdi</module>
         <module>filesystem-core</module>
         <module>filesystem-http</module>
         <module>filesystem-memory</module>
+        <module>filesystem-minio</module>
         <module>filesystem-s3</module>
-        <module>filesystem-cdi</module>
     </modules>
     
     <properties>

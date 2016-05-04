@@ -49,6 +49,7 @@ import onl.area51.filesystem.io.FileSystemIO;
  */
 public class FileSystemUtils
 {
+
     /**
      * System property holding the cache base directory
      */
@@ -262,7 +263,7 @@ public class FileSystemUtils
      */
     public static String getString( Map<String, ?> env, String key )
     {
-        return getString( env, key, null );
+        return getString( env, key, () -> null );
     }
 
     /**
@@ -277,6 +278,12 @@ public class FileSystemUtils
     public static String getString( Map<String, ?> env, String key, String defaultValue )
     {
         return Objects.toString( env == null ? null : env.get( key ), defaultValue );
+    }
+
+    public static String getString( Map<String, ?> env, String key, Supplier<String> defaultValue )
+    {
+        Object o = env == null ? null : env.get( key );
+        return o == null ? defaultValue.get() : o.toString();
     }
 
     /**
