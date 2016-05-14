@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>onl.area51.filesystem</groupId>
+        <artifactId>filesystem-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <groupId>onl.area51.filesystem</groupId>
+    <artifactId>filesystem-dpkg</artifactId>
+    <packaging>jar</packaging>
+    
+    <name>Filesystem DPKG</name>
+    
+    <description>
+        Converts a filesystem into a debian dpkg (apt) repository.
+        
+        It does this by monitoring a filesytem so that when a .deb file is uploaded to the
+        repository it then updates the associated Packages.gz file.
+        
+        The file layout within the filesystem should follow the following layout:
+        
+        /distribution/category/architecture/packages
+        
+        Using this means you can then map the filesystem to an http(s) server and map to it
+        with the following line under /etc/sources.list.d
+        
+        deb http://myserver.example.com distribution category
+        
+        Useage within area51/fileserver docker image:
+        
+        As caches are a subdirectory on the server then the sources.list line differs slightly.
+        Say you have called the filesystem "repo" then using the suggested layout then you
+        need to use:
+        
+        deb http://myserver.example.com/repo distribution category
+        
+        Alternatively you can create a filesystem for each distribution and then use the
+        following layout within the filesystem:
+        
+        /category/architecture/packages
+        
+        then for a filesystem called "distribution" you could use the source:
+        
+        deb http://myserver.example.com distribution category
+        
+        What I personally use is the first one as I generate packages for
+        Debian, Raspian and Ubuntu so for me I'd use the sources:
+        
+        deb http://myserver.example.com/ubuntu distribution category
+        deb http://myserver.example.com/debian distribution category
+        deb http://myserver.example.com/raspian distribution category
+        
+        etc.
+        
+        An example filesystem layout:
+        
+        /precise/main/binary-amd64/Packages.gz
+        /precise/main/binary-amd64/libarea51_0.1_all.deb
+        /trusty/main/binary-amd64/Packages.gz
+        /trusty/main/binary-amd64/libarea51_0.1_all.deb
+        
+        Prerequisites:
+        
+        You need the dpkg-dev package installed. This will be present on a system running dpkg
+        like Debian or Ubuntu or you may need to install it first.
+        
+        For Alpine, you can use the following (as root) to install it: apk add --update dpkg-dev
+    </description>
+    
+    <dependencies>
+        
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>onl.area51.filesystem</groupId>
+            <artifactId>filesystem-core</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+                
+        <dependency>
+            <groupId>org.kohsuke.metainf-services</groupId>
+            <artifactId>metainf-services</artifactId>
+            <version>1.5</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.10</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    
+</project>

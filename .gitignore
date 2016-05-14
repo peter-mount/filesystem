@@ -7,3 +7,4 @@
 /filesystem-memory/target/
 /filesystem-cdi/target/
 /filesystem-minio/target/
+/filesystem-dpkg/target/
