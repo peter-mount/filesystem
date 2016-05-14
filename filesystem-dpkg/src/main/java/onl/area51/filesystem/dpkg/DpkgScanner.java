@@ -16,19 +16,17 @@
 package onl.area51.filesystem.dpkg;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
+import onl.area51.filesystem.FileSystemUtils;
 import onl.area51.filesystem.io.FileSystemIO;
 
 /**
@@ -40,10 +38,12 @@ public class DpkgScanner
 {
 
     private static final Logger LOG = Logger.getGlobal();
+    private final DpkgSigner signer;
     private final FileSystemIO delegate;
 
-    public DpkgScanner( FileSystemIO delegate, Map<String, ?> env )
+    public DpkgScanner( DpkgSigner signer, FileSystemIO delegate, Map<String, ?> env )
     {
+        this.signer = signer;
         this.delegate = delegate;
     }
 
@@ -79,12 +79,13 @@ public class DpkgScanner
                                                                   StandardOpenOption.WRITE,
                                                                   StandardOpenOption.DSYNC ) ) {
                         try( GZIPOutputStream gz = new GZIPOutputStream( os ) ) {
-                            copy( is, gz );
+                            FileSystemUtils.copy( is, gz );
                         }
                     }
                 }
 
                 LOG.log( Level.INFO, () -> COMPLETED_REFRESH_OF + dir );
+                signer.sign( packages );
             }
             finally {
                 tempFile.delete();
@@ -95,6 +96,9 @@ public class DpkgScanner
         }
     }
 
+    /**
+     * Optionally called on filesystem start, rescans the entire directory structure recreating Packages.gz files so they are up to date.
+     */
     public void refresh()
     {
         LOG.log( Level.INFO, () -> BEGINING_REFRESH_OF + delegate.getBaseDirectory() );
@@ -116,16 +120,4 @@ public class DpkgScanner
         }
     }
 
-    private static long copy( InputStream source, OutputStream sink )
-            throws IOException
-    {
-        long nread = 0L;
-        byte[] buf = new byte[BUFFER_SIZE];
-        int n;
-        while( (n = source.read( buf )) > 0 ) {
-            sink.write( buf, 0, n );
-            nread += n;
-        }
-        return nread;
-    }
 }

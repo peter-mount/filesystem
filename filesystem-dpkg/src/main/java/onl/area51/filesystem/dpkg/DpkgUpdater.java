@@ -32,12 +32,15 @@ public class DpkgUpdater
 {
 
     private final FileSystemIO delegate;
+    private final DpkgSigner signer;
     private final DpkgScanner scanner;
 
     public DpkgUpdater( FileSystemIO delegate, Map<String, ?> env )
     {
         this.delegate = delegate;
-        scanner = new DpkgScanner( delegate, env );
+
+        signer = new DpkgSigner( delegate, env );
+        scanner = new DpkgScanner( signer, delegate, env );
 
         if( FileSystemUtils.isTrue( env, REFRESH_PACKAGES_ON_STARTUP ) ) {
             Thread t = new Thread( scanner::refresh );
@@ -54,6 +57,7 @@ public class DpkgUpdater
         Path p = delegate.toPath( path );
         Path f = p.getName( p.getNameCount() - 1 );
         if( f.toString().endsWith( DEB ) ) {
+            signer.sign( p );
             scanner.scanPackages( p.getParent() );
         }
     }
