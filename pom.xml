@@ -19,6 +19,7 @@
         <module>filesystem-memory</module>
         <module>filesystem-minio</module>
         <module>filesystem-s3</module>
+        <module>filesystem-dpkg</module>
     </modules>
     
     <properties>

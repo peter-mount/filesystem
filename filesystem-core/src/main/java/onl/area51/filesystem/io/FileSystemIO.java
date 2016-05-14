@@ -60,10 +60,24 @@ public interface FileSystemIO
     }
 
     /**
+     * Returns a {@link Path} within the base directory for a Path
+     *
+     * @param path
+     *
+     * @return
+     *
+     * @throws IOException
+     */
+    Path toPath( char[] path )
+            throws IOException;
+
+    /**
      * Does the path exist in the filesystem
      *
      * @param path
+     *
      * @return
+     *
      * @throws IOException
      */
     boolean exists( char path[] )
@@ -74,6 +88,7 @@ public interface FileSystemIO
      *
      * @param path
      * @param attrs
+     *
      * @throws IOException
      */
     void createDirectory( char path[], FileAttribute<?> attrs[] )
@@ -83,7 +98,9 @@ public interface FileSystemIO
      * Create an InputStream for a path
      *
      * @param path
+     *
      * @return
+     *
      * @throws IOException           on error
      * @throws FileNotFoundException if the path does not exist
      */
@@ -95,7 +112,9 @@ public interface FileSystemIO
      *
      * @param path
      * @param options
+     *
      * @return
+     *
      * @throws IOException
      */
     OutputStream newOutputStream( char path[], OpenOption... options )
@@ -106,6 +125,7 @@ public interface FileSystemIO
      *
      * @param path
      * @param exists
+     *
      * @throws IOException
      */
     void deleteFile( char path[], boolean exists )
@@ -115,7 +135,9 @@ public interface FileSystemIO
      * Is the Path a file
      *
      * @param path
+     *
      * @return
+     *
      * @throws IOException
      */
     boolean isFile( char path[] )
@@ -125,7 +147,9 @@ public interface FileSystemIO
      * Is the path a directory
      *
      * @param path
+     *
      * @return
+     *
      * @throws IOException
      */
     boolean isDirectory( char path[] )
@@ -137,7 +161,9 @@ public interface FileSystemIO
      * @param path
      * @param options
      * @param attrs
+     *
      * @return
+     *
      * @throws IOException
      */
     SeekableByteChannel newByteChannel( char path[], Set<? extends OpenOption> options, FileAttribute<?>... attrs )
@@ -149,7 +175,9 @@ public interface FileSystemIO
      * @param path
      * @param options
      * @param attrs
+     *
      * @return
+     *
      * @throws IOException
      */
     FileChannel newFileChannel( char path[], Set<? extends OpenOption> options, FileAttribute<?>... attrs )
@@ -162,6 +190,7 @@ public interface FileSystemIO
      * @param src
      * @param dest
      * @param options
+     *
      * @throws IOException
      */
     void copyFile( boolean b, char src[], char dest[], CopyOption... options )
@@ -171,7 +200,9 @@ public interface FileSystemIO
      * Get the attributes for a path
      *
      * @param path
+     *
      * @return
+     *
      * @throws IOException
      */
     BasicFileAttributes getAttributes( char path[] )
@@ -181,6 +212,7 @@ public interface FileSystemIO
      * Get an attribute view of a path
      *
      * @param path
+     *
      * @return
      */
     BasicFileAttributeView getAttributeView( char path[] );
@@ -190,7 +222,9 @@ public interface FileSystemIO
      *
      * @param path
      * @param filter
+     *
      * @return
+     *
      * @throws IOException
      */
     DirectoryStream<Path> newDirectoryStream( char path[], Filter<? super Path> filter )
@@ -218,7 +252,9 @@ public interface FileSystemIO
      * The length of the file at a path
      *
      * @param path
+     *
      * @return
+     *
      * @throws IOException if the path does not exist or is a directory
      */
     long size( char[] path )

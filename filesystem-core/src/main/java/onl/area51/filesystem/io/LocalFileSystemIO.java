@@ -97,7 +97,7 @@ public abstract class LocalFileSystemIO
             throws IOException;
 
     @Override
-    protected Path toPath( char[] path )
+    public Path toPath( char[] path )
             throws IOException
     {
         Path p = getBaseDirectory().resolve( getPath( path ) ).toAbsolutePath();

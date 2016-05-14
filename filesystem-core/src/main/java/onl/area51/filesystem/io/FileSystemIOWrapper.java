@@ -46,6 +46,13 @@ public abstract class FileSystemIOWrapper
         this.delegate = delegate;
     }
 
+    @Override
+    public Path toPath( char[] path )
+            throws IOException
+    {
+        return delegate.toPath( path );
+    }
+
     protected final FileSystemIO getDelegate()
     {
         return delegate;
