@@ -12,6 +12,19 @@
         A collection of Java FileSystem implementations
     </description>
     
+    <distributionManagement>
+        <repository>
+            <id>releases</id>
+            <name>Area51 Releases</name>
+            <url>https://nexus.area51.onl/repository/maven-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <name>Area51 Snapshots</name>
+            <url>https://nexus.area51.onl/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+    
     <modules>
         <module>filesystem-cdi</module>
         <module>filesystem-core</module>
