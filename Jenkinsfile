@@ -6,7 +6,7 @@ def mvn = {
         ' -v "$(pwd)":/work' +
         ' -w /work' +
         ' ' + buildImage +
-        ' mvn ' + cmd
+        ' mvn -Dmaven.test.skip=true -DskipTests ' + cmd
 }
 
 properties([
