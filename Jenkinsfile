@@ -14,7 +14,8 @@ properties([
   disableConcurrentBuilds(),
   disableResume(),
   pipelineTriggers([
-    cron('H H * * *')
+    cron('H H * * *'),
+    upstream('/Public/Java/master')
   ])
 ])
 
